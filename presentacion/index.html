@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arquitectura de Agentes IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a40;
+    --accent: #7c6af7;
+    --accent2: #f7a26a;
+    --accent3: #6af7c8;
+    --accent4: #f76a8e;
+    --text: #e8e8f0;
+    --muted: #7070a0;
+    --glow: rgba(124, 106, 247, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  header {
+    padding: 60px 40px 40px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -100px; left: -100px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(124,106,247,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -50px; right: -50px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(247,162,106,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-size: clamp(36px, 6vw, 72px);
+    font-weight: 800;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+  h1 span { color: var(--accent); }
+  .header-desc {
+    color: var(--muted);
+    font-size: 16px;
+    max-width: 600px;
+  }
+
+  /* NAV TABS */
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    padding: 10px 20px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text); border-color: var(--border); }
+  .tab-btn.active {
+    background: var(--glow);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* MAIN */
+  main { max-width: 1100px; margin: 0 auto; padding: 40px; }
+
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+  /* SECTION TITLE */
+  .section-header {
+    margin-bottom: 36px;
+  }
+  .section-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent3);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-size: clamp(24px, 4vw, 40px);
+    font-weight: 800;
+    margin-bottom: 12px;
+  }
+  .section-desc { color: var(--muted); font-size: 15px; max-width: 700px; }
+
+  /* CARDS */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    transition: border-color 0.2s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .card:hover::before { opacity: 1; }
+  .card-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .card-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .card-body { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+  /* CODE BLOCKS */
+  .code-block {
+    background: #0d0d14;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin: 20px 0;
+    position: relative;
+    overflow-x: auto;
+  }
+  .code-block pre {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.8;
+    white-space: pre;
+  }
+  .code-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .c-purple { color: #b39dfa; }
+  .c-green  { color: var(--accent3); }
+  .c-orange { color: var(--accent2); }
+  .c-pink   { color: var(--accent4); }
+  .c-muted  { color: var(--muted); }
+  .c-yellow { color: #f7e26a; }
+
+  /* PIPELINE */
+  .pipeline {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin: 30px 0;
+    overflow-x: auto;
+    padding-bottom: 10px;
+  }
+  .pipe-step {
+    flex: 1;
+    min-width: 150px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0;
+    padding: 20px 16px;
+    text-align: center;
+    position: relative;
+    transition: background 0.2s;
+  }
+  .pipe-step:first-child { border-radius: 10px 0 0 10px; }
+  .pipe-step:last-child { border-radius: 0 10px 10px 0; }
+  .pipe-step:hover { background: var(--surface2); }
+  .pipe-step::after {
+    content: '→';
+    position: absolute;
+    right: -14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent);
+    font-size: 18px;
+    z-index: 1;
+  }
+  .pipe-step:last-child::after { display: none; }
+  .pipe-icon { font-size: 24px; margin-bottom: 8px; }
+  .pipe-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .pipe-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .pipe-desc { font-size: 11px; color: var(--muted); }
+
+  /* RULE CARDS */
+  .rules-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-bottom: 30px;
+  }
+  .rule-item {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .rule-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--glow);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 2px 8px;
+    min-width: 36px;
+    text-align: center;
+    margin-top: 2px;
+  }
+  .rule-content {}
+  .rule-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .rule-desc { font-size: 13px; color: var(--muted); }
+
+  /* BADGE */
+  .badge {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin: 2px;
+  }
+  .badge-purple { background: rgba(124,106,247,0.15); border: 1px solid var(--accent); color: var(--accent); }
+  .badge-green  { background: rgba(106,247,200,0.1); border: 1px solid var(--accent3); color: var(--accent3); }
+  .badge-orange { background: rgba(247,162,106,0.1); border: 1px solid var(--accent2); color: var(--accent2); }
+  .badge-pink   { background: rgba(247,106,142,0.1); border: 1px solid var(--accent4); color: var(--accent4); }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 36px 0;
+  }
+
+  /* HIGHLIGHT BOX */
+  .highlight-box {
+    background: var(--glow);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 20px 0;
+  }
+  .highlight-box.orange { background: rgba(247,162,106,0.07); border-color: var(--accent2); }
+  .highlight-box.green  { background: rgba(106,247,200,0.07); border-color: var(--accent3); }
+  .highlight-box .hl-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .highlight-box .hl-title.orange { color: var(--accent2); }
+  .highlight-box .hl-title.green  { color: var(--accent3); }
+  .highlight-box .hl-title { color: var(--accent); }
+  .highlight-box p { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+  /* TWO-COL */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  @media (max-width: 700px) {
+    .two-col { grid-template-columns: 1fr; }
+    .pipeline { flex-direction: column; }
+    .pipe-step { border-radius: 10px !important; }
+    .pipe-step::after { content: '↓'; right: 50%; bottom: -14px; top: auto; transform: translateX(50%); }
+    main { padding: 24px; }
+    .nav-tabs { padding: 16px 20px; }
+    header { padding: 40px 24px 30px; }
+  }
+
+  /* AGENT TEMPLATE */
+  .agent-template {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .agent-template-header {
+    padding: 16px 20px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .agent-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+  .agent-template-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .agent-template-body { padding: 20px; }
+
+  /* INTERACTIVE ACCORDION */
+  .accordion { margin-bottom: 10px; }
+  .accordion-header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s;
+    user-select: none;
+  }
+  .accordion-header:hover { background: var(--surface2); }
+  .accordion-header.open { border-color: var(--accent); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+  .accordion-title { font-size: 14px; font-weight: 700; }
+  .accordion-arrow {
+    color: var(--accent);
+    font-size: 12px;
+    transition: transform 0.3s;
+    font-family: 'Space Mono', monospace;
+  }
+  .accordion-header.open .accordion-arrow { transform: rotate(90deg); }
+  .accordion-body {
+    display: none;
+    background: #0d0d14;
+    border: 1px solid var(--accent);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    padding: 20px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+  .accordion-body.open { display: block; animation: fadeIn 0.2s ease; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-tag">// Guía de referencia · Claude Code + Ollama</div>
+  <h1>Arquitectura de<br><span>Agentes IA</span></h1>
+  <p class="header-desc">Cómo estructurar, separar, dar contexto y orquestar agentes para N8N, programación, presentaciones y más.</p>
+</header>
+
+<nav class="nav-tabs">
+  <button class="tab-btn active" onclick="showTab('fundamentos')">01 · Fundamentos</button>
+  <button class="tab-btn" onclick="showTab('anatomia')">02 · Anatomía del Agente</button>
+  <button class="tab-btn" onclick="showTab('separacion')">03 · Separación</button>
+  <button class="tab-btn" onclick="showTab('contexto')">04 · Contexto & Prompts</button>
+  <button class="tab-btn" onclick="showTab('pipeline')">05 · Pipeline Multi-Agente</button>
+  <button class="tab-btn" onclick="showTab('skills')">06 · Skills & Herramientas</button>
+  <button class="tab-btn" onclick="showTab('plantillas')">07 · Plantillas</button>
+  <button class="tab-btn" onclick="showTab('recomendaciones')">08 · Recomendaciones</button>
+</nav>
+
+<main>
+
+<!-- ===== 01 FUNDAMENTOS ===== -->
+<section class="section active" id="fundamentos">
+  <div class="section-header">
+    <div class="section-tag">// 01</div>
+    <h2 class="section-title">Fundamentos del Diseño de Agentes</h2>
+    <p class="section-desc">Un agente IA es una unidad autónoma con un propósito claro, herramientas específicas y un contexto bien definido.</p>
+  </div>
+
+  <div class="cards-grid">
+    <div class="card">
+      <span class="card-icon">🎯</span>
+      <div class="card-title">Principio de Responsabilidad Única</div>
+      <div class="card-body">Cada agente hace <strong>una sola cosa muy bien</strong>. Un agente que "hace todo" falla en todo. La especialización permite entrenamiento de contexto preciso, prompts más cortos y resultados más predecibles.</div>
+    </div>
+    <div class="card">
+      <span class="card-icon">🧩</span>
+      <div class="card-title">Composición sobre Monolitos</div>
+      <div class="card-body">Varios agentes pequeños conectados superan a uno grande. Cada uno puede ser reemplazado, mejorado o reordenado sin romper el sistema. Piensa en microservicios, no en monolitos.</div>
+    </div>
+    <div class="card">
+      <span class="card-icon">📡</span>
+      <div class="card-title">Contratos de Comunicación</div>
+      <div class="card-body">Define cómo los agentes se pasan información: formato de input, formato de output, errores esperados. Sin un contrato claro, la cadena se rompe.</div>
+    </div>
+    <div class="card">
+      <span class="card-icon">🔁</span>
+      <div class="card-title">Idempotencia</div>
+      <div class="card-body">Un agente bien diseñado puede correr múltiples veces con el mismo input y producir el mismo output. Esto es esencial para debugging y reintentos.</div>
+    </div>
+    <div class="card">
+      <span class="card-icon">📝</span>
+      <div class="card-title">Memoria & Estado</div>
+      <div class="card-body">Decide conscientemente qué información persiste entre llamadas (memoria larga) y qué es solo del turno actual (contexto de sesión). No mezcles ambas.</div>
+    </div>
+    <div class="card">
+      <span class="card-icon">🛑</span>
+      <div class="card-title">Fail-Safe & Escalamiento</div>
+      <div class="card-body">Define qué pasa cuando un agente falla: ¿reintenta? ¿avisa al orquestador? ¿pausa el pipeline? Diseña el fallo antes de diseñar el éxito.</div>
+    </div>
+  </div>
+
+  <div class="highlight-box">
+    <div class="hl-title">// Regla de oro</div>
+    <p>Un agente debe ser describible en una sola oración. Si necesitas "y" para describirlo, tenés dos agentes.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section-header">
+    <h2 class="section-title" style="font-size:22px;">Los 4 tipos de agentes más comunes</h2>
+  </div>
+  <div class="cards-grid">
+    <div class="card">
+      <span class="badge badge-purple">Tipo A</span>
+      <div class="card-title" style="margin-top:10px;">Orquestador / Planner</div>
+      <div class="card-body">Recibe el objetivo general, lo descompone en subtareas y delega a otros agentes. <strong>No ejecuta, coordina.</strong></div>
+    </div>
+    <div class="card">
+      <span class="badge badge-orange">Tipo B</span>
+      <div class="card-title" style="margin-top:10px;">Executor / Worker</div>
+      <div class="card-body">Recibe una tarea específica y la ejecuta usando herramientas. <strong>No piensa, hace.</strong></div>
+    </div>
+    <div class="card">
+      <span class="badge badge-green">Tipo C</span>
+      <div class="card-title" style="margin-top:10px;">Reviewer / Critic</div>
+      <div class="card-body">Evalúa el output de otros agentes contra criterios definidos. <strong>No crea, juzga.</strong></div>
+    </div>
+    <div class="card">
+      <span class="badge badge-pink">Tipo D</span>
+      <div class="card-title" style="margin-top:10px;">Specialist</div>
+      <div class="card-body">Experto en un dominio muy específico (N8N, código Python, diseño). <strong>Profundidad, no amplitud.</strong></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 02 ANATOMÍA ===== -->
+<section class="section" id="anatomia">
+  <div class="section-header">
+    <div class="section-tag">// 02</div>
+    <h2 class="section-title">Anatomía de un Agente</h2>
+    <p class="section-desc">Los 5 componentes que definen cualquier agente, independientemente de la tarea.</p>
+  </div>
+
+  <div class="agent-template">
+    <div class="agent-template-header">
+      <div class="agent-dot"></div>
+      <div class="agent-template-title">ESTRUCTURA BASE DE UN AGENTE</div>
+    </div>
+    <div class="agent-template-body">
+      <div class="code-block">
+        <div class="code-label">// YAML de configuración conceptual</div>
+        <pre><span class="c-purple">agent</span>:
+  <span class="c-orange">id</span>: <span class="c-green">"n8n-builder-v1"</span>          <span class="c-muted"># Identificador único</span>
+  <span class="c-orange">role</span>: <span class="c-green">"N8N Workflow Architect"</span>   <span class="c-muted"># Un título descriptivo</span>
+  <span class="c-orange">version</span>: <span class="c-green">"1.0"</span>
+
+  <span class="c-purple">identity</span>:                       <span class="c-muted"># Quién es el agente</span>
+    <span class="c-orange">persona</span>: <span class="c-green">"Sos un experto en..."</span>
+    <span class="c-orange">tone</span>: <span class="c-green">"técnico, conciso"</span>
+
+  <span class="c-purple">objective</span>:                      <span class="c-muted"># Qué hace</span>
+    <span class="c-orange">primary</span>: <span class="c-green">"Diseñar workflows N8N..."</span>
+    <span class="c-orange">scope</span>: <span class="c-green">"Solo N8N, no otros sistemas"</span>
+
+  <span class="c-purple">context</span>:                        <span class="c-muted"># Qué sabe</span>
+    <span class="c-orange">domain_knowledge</span>: [<span class="c-green">"n8n-docs"</span>, <span class="c-green">"api-patterns"</span>]
+    <span class="c-orange">constraints</span>: [<span class="c-green">"solo v1.x"</span>, <span class="c-green">"sin credenciales hardcoded"</span>]
+
+  <span class="c-purple">tools</span>:                          <span class="c-muted"># Qué puede usar</span>
+    - <span class="c-green">read_file</span>
+    - <span class="c-green">write_file</span>
+    - <span class="c-green">search_docs</span>
+
+  <span class="c-purple">io</span>:                            <span class="c-muted"># Contratos de entrada/salida</span>
+    <span class="c-orange">input_format</span>: <span class="c-green">"descripción en lenguaje natural"</span>
+    <span class="c-orange">output_format</span>: <span class="c-green">"JSON de nodos N8N"</span>
+    <span class="c-orange">error_format</span>: <span class="c-green">"{ error: string, suggestions: [] }"</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <h3 style="font-size:16px;margin-bottom:16px;font-weight:700;">🧠 Identity (quién es)</h3>
+      <div class="rules-list">
+        <div class="rule-item">
+          <div class="rule-num">01</div>
+          <div class="rule-content">
+            <div class="rule-title">Persona clara</div>
+            <div class="rule-desc">Define el rol con experiencia específica. No "asistente IA", sino "arquitecto de workflows con 5 años en N8N".</div>
+          </div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-num">02</div>
+          <div class="rule-content">
+            <div class="rule-title">Tono consistente</div>
+            <div class="rule-desc">Técnico, formal, casual, conciso. El tono afecta el formato del output.</div>
+          </div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-num">03</div>
+          <div class="rule-content">
+            <div class="rule-title">Límites de identidad</div>
+            <div class="rule-desc">Qué NO es: "No soy un asistente general. Solo resuelvo problemas de N8N."</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <h3 style="font-size:16px;margin-bottom:16px;font-weight:700;">📋 Objective (qué hace)</h3>
+      <div class="rules-list">
+        <div class="rule-item">
+          <div class="rule-num">A</div>
+          <div class="rule-content">
+            <div class="rule-title">Objetivo primario</div>
+            <div class="rule-desc">Una tarea central en una oración. El agente debe poder decir "mi trabajo es X".</div>
+          </div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-num">B</div>
+          <div class="rule-content">
+            <div class="rule-title">Scope explícito</div>
+            <div class="rule-desc">Qué entra y qué sale de su responsabilidad. El scope previene scope creep.</div>
+          </div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-num">C</div>
+          <div class="rule-content">
+            <div class="rule-title">Criterio de éxito</div>
+            <div class="rule-desc">¿Cómo sabe el agente que terminó bien? Define el "done" explícitamente.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 03 SEPARACIÓN ===== -->
+<section class="section" id="separacion">
+  <div class="section-header">
+    <div class="section-tag">// 03</div>
+    <h2 class="section-title">Cómo Separar Agentes</h2>
+    <p class="section-desc">La separación correcta es la decisión más importante. Hay 3 ejes para decidir cuándo un agente es uno o dos.</p>
+  </div>
+
+  <div class="cards-grid">
+    <div class="card">
+      <span class="card-icon">🗂️</span>
+      <div class="card-title">Por Dominio de Conocimiento</div>
+      <div class="card-body">Separá agentes que necesitan conocimiento de contextos distintos.<br><br>
+        <span class="badge badge-purple">N8N Agent</span>
+        <span class="badge badge-orange">Python Agent</span>
+        <span class="badge badge-green">Slides Agent</span>
+        <br><br>No mezcles: un agente que "sabe N8N y Python y diseño" va a ser mediocre en todo.
+      </div>
+    </div>
+    <div class="card">
+      <span class="card-icon">⚡</span>
+      <div class="card-title">Por Tipo de Operación</div>
+      <div class="card-body">Separá agentes según el tipo de acción que realizan.<br><br>
+        <span class="badge badge-purple">Planner</span>
+        <span class="badge badge-orange">Executor</span>
+        <span class="badge badge-green">Tester</span>
+        <span class="badge badge-pink">Documenter</span>
+        <br><br>Planear y ejecutar son capacidades mentalmente distintas, requieren prompts distintos.
+      </div>
+    </div>
+    <div class="card">
+      <span class="card-icon">🔄</span>
+      <div class="card-title">Por Frecuencia de Uso</div>
+      <div class="card-body">Si una función se usa mucho más que otras, merece su propio agente.<br><br>
+        Si el 80% de tus tareas son de código, un agente de código generalista tiene sentido. Las tareas de presentaciones van a un agente separado.
+      </div>
+    </div>
+    <div class="card">
+      <span class="card-icon">📏</span>
+      <div class="card-title">Por Tamaño de Contexto</div>
+      <div class="card-body">Cuando un agente necesita demasiado contexto para hacer su trabajo, dividilo.<br><br>
+        Un agente que necesita saber N8N docs + Python + git + diseño = ventana de contexto saturada = resultados pobres.
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <h3 style="font-size:18px;font-weight:700;margin-bottom:20px;">Estructura de carpetas sugerida para Claude Code</h3>
+  <div class="code-block">
+    <div class="code-label">// Estructura de proyecto</div>
+    <pre><span class="c-purple">agents/</span>
+├── <span class="c-green">_shared/</span>
+│   ├── <span class="c-orange">base-context.md</span>        <span class="c-muted"># Contexto común a todos los agentes</span>
+│   ├── <span class="c-orange">output-formats.md</span>      <span class="c-muted"># Formatos de salida estándar</span>
+│   └── <span class="c-orange">error-handling.md</span>      <span class="c-muted"># Cómo reportar errores</span>
+│
+├── <span class="c-green">orchestrator/</span>
+│   ├── <span class="c-orange">CLAUDE.md</span>              <span class="c-muted"># System prompt del orquestador</span>
+│   └── <span class="c-orange">task-decomposition.md</span>  <span class="c-muted"># Cómo descomponer tareas</span>
+│
+├── <span class="c-green">n8n-agent/</span>
+│   ├── <span class="c-orange">CLAUDE.md</span>              <span class="c-muted"># System prompt especializado en N8N</span>
+│   ├── <span class="c-orange">n8n-patterns.md</span>        <span class="c-muted"># Patrones comunes de N8N</span>
+│   └── <span class="c-orange">node-library.json</span>      <span class="c-muted"># Nodos disponibles</span>
+│
+├── <span class="c-green">code-agent/</span>
+│   ├── <span class="c-orange">CLAUDE.md</span>
+│   ├── <span class="c-orange">code-style.md</span>
+│   └── <span class="c-orange">testing-patterns.md</span>
+│
+├── <span class="c-green">slides-agent/</span>
+│   ├── <span class="c-orange">CLAUDE.md</span>
+│   └── <span class="c-orange">design-principles.md</span>
+│
+└── <span class="c-green">reviewer-agent/</span>
+    ├── <span class="c-orange">CLAUDE.md</span>
+    └── <span class="c-orange">review-checklist.md</span></pre>
+  </div>
+
+  <div class="highlight-box orange">
+    <div class="hl-title orange">// ¿Uno o dos agentes?</div>
+    <p>Hacete estas preguntas: ¿El agente necesita saber cosas completamente distintas para partes distintas del trabajo? ¿El prompt supera 500 tokens solo de contexto? ¿El agente a veces hace A y a veces hace B, nunca ambas juntas? → Son dos agentes.</p>
+  </div>
+</section>
+
+<!-- ===== 04 CONTEXTO ===== -->
+<section class="section" id="contexto">
+  <div class="section-header">
+    <div class="section-tag">// 04</div>
+    <h2 class="section-title">Contexto & Estructura de Prompts</h2>
+    <p class="section-desc">El contexto es el conocimiento estático del agente. El prompt es la instrucción dinámica. Nunca los mezcles.</p>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <span class="card-icon">📚</span>
+      <div class="card-title">Contexto (CLAUDE.md)</div>
+      <div class="card-body">
+        Es el system prompt. Define quién es el agente, qué sabe y cómo opera.<br><br>
+        <strong>Cambia raramente.</strong> Es la "configuración" del agente.<br><br>
+        Incluye: persona, dominio, restricciones, formato de output, ejemplos de patrones.
+      </div>
+    </div>
+    <div class="card">
+      <span class="card-icon">✉️</span>
+      <div class="card-title">Prompt (user message)</div>
+      <div class="card-body">
+        Es la instrucción de la tarea actual. Específica, acotada, con el estado actual.<br><br>
+        <strong>Cambia en cada llamada.</strong> Es el "qué hacer ahora".<br><br>
+        Incluye: tarea específica, datos de entrada, resultado esperado, contexto de esta tarea.
+      </div>
+    </div>
+  </div>
+
+  <h3 style="font-size:18px;font-weight:700;margin:28px 0 16px;">Estructura de CLAUDE.md (System Prompt)</h3>
+  <div class="code-block">
+    <div class="code-label">// agents/n8n-agent/CLAUDE.md</div>
+    <pre><span class="c-purple"># ROL Y PERSONA</span>
+Sos un experto en N8N con dominio profundo de workflows de automatización.
+Tu especialidad: integrar APIs REST, transformar datos y diseñar flujos robustos.
+Tono: técnico y directo. Sin explicaciones innecesarias.
+
+<span class="c-purple"># OBJETIVO</span>
+Generar configuraciones de workflows N8N en formato JSON válido, listo para importar.
+Scope: Solo N8N. Si la tarea requiere código Python o diseño, declinás y lo indicás.
+
+<span class="c-purple"># CONOCIMIENTO DE DOMINIO</span>
+- Versión target: N8N 1.x
+- Nodos disponibles: [lista de nodos relevantes]
+- Patrones aprobados: webhook → transform → send, scheduler → fetch → store
+- Restricciones: no hardcodear credenciales, usar variables de entorno
+
+<span class="c-purple"># FORMATO DE OUTPUT</span>
+Siempre respondé con:
+1. Breve descripción del workflow (2-3 líneas)
+2. JSON de configuración entre ```json ``` 
+3. Lista de variables de entorno necesarias
+
+<span class="c-purple"># MANEJO DE ERRORES</span>
+Si la tarea está fuera de scope: "OUT_OF_SCOPE: [razón]"
+Si falta información: "NEEDS_INFO: [qué información necesitás]"
+
+<span class="c-purple"># EJEMPLOS DE REFERENCIA</span>
+[Ejemplos de workflows bien estructurados para que el agente aprenda el patrón]</pre>
+  </div>
+
+  <h3 style="font-size:18px;font-weight:700;margin:28px 0 16px;">Estructura del Prompt de Usuario</h3>
+  <div class="code-block">
+    <div class="code-label">// Plantilla de prompt para llamar al agente</div>
+    <pre><span class="c-purple"># TAREA</span>
+[Descripción clara de qué hacer en esta llamada específica]
+
+<span class="c-purple"># INPUT</span>
+[Datos de entrada estructurados - JSON, texto, archivo]
+
+<span class="c-purple"># CONTEXTO DE ESTA TAREA</span>
+[Información relevante SOLO para este run: estado anterior, decisiones tomadas, etc.]
+
+<span class="c-purple"># OUTPUT ESPERADO</span>
+[Qué formato y contenido necesitás del output]
+
+<span class="c-purple"># RESTRICCIONES ADICIONALES</span>
+[Cualquier limitación específica de esta tarea que no está en el system prompt]</pre>
+  </div>
+
+  <div class="highlight-box green">
+    <div class="hl-title green">// Tip: Few-shot en el contexto</div>
+    <p>Incluir 2-3 ejemplos de input/output en el CLAUDE.md es lo que más mejora la calidad. El modelo aprende el patrón exacto que querés. No expliques cómo hacerlo, mostrá cómo se ve cuando está bien hecho.</p>
+  </div>
+
+  <h3 style="font-size:18px;font-weight:700;margin:28px 0 16px;">Los 3 niveles de contexto</h3>
+  <div class="rules-list">
+    <div class="rule-item">
+      <div class="rule-num" style="background:rgba(124,106,247,0.15);">L1</div>
+      <div class="rule-content">
+        <div class="rule-title">Contexto Global (compartido entre todos los agentes)</div>
+        <div class="rule-desc">Stack tecnológico, convenciones de nomenclatura, estilo de código del proyecto, quién usa el sistema. Va en <code>_shared/base-context.md</code> e importado en cada CLAUDE.md.</div>
+      </div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num" style="background:rgba(247,162,106,0.1);">L2</div>
+      <div class="rule-content">
+        <div class="rule-title">Contexto del Agente (específico del rol)</div>
+        <div class="rule-desc">Conocimiento de dominio, patrones específicos, ejemplos. Va en el CLAUDE.md del agente. Solo este agente lo necesita.</div>
+      </div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num" style="background:rgba(106,247,200,0.1);">L3</div>
+      <div class="rule-content">
+        <div class="rule-title">Contexto de Sesión (específico de esta tarea)</div>
+        <div class="rule-desc">Estado del pipeline, resultado del agente anterior, decisiones de esta sesión. Va en el prompt de usuario. Se descarta después.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 05 PIPELINE ===== -->
+<section class="section" id="pipeline">
+  <div class="section-header">
+    <div class="section-tag">// 05</div>
+    <h2 class="section-title">Pipeline Multi-Agente</h2>
+    <p class="section-desc">El patrón Planner → Executor → Tester → Documenter: cómo conectarlos y qué pasa entre cada etapa.</p>
+  </div>
+
+  <div class="pipeline">
+    <div class="pipe-step">
+      <div class="pipe-icon">🧭</div>
+      <div class="pipe-label">Agente 1</div>
+      <div class="pipe-name">Planner</div>
+      <div class="pipe-desc">Descompone el objetivo en subtareas</div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-icon">⚡</div>
+      <div class="pipe-label">Agente 2</div>
+      <div class="pipe-name">Executor</div>
+      <div class="pipe-desc">Ejecuta cada subtarea</div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-icon">🔍</div>
+      <div class="pipe-label">Agente 3</div>
+      <div class="pipe-name">Tester</div>
+      <div class="pipe-desc">Evalúa y valida el output</div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-icon">📄</div>
+      <div class="pipe-label">Agente 4</div>
+      <div class="pipe-name">Documenter</div>
+      <div class="pipe-desc">Genera docs del resultado</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-label">// Contrato de comunicación entre agentes</div>
+    <pre><span class="c-muted">/* Planner → Executor */</span>
+{
+  <span class="c-orange">"plan_id"</span>: <span class="c-green">"task-2024-001"</span>,
+  <span class="c-orange">"objective"</span>: <span class="c-green">"Crear workflow N8N para sincronizar leads"</span>,
+  <span class="c-orange">"subtasks"</span>: [
+    { <span class="c-orange">"id"</span>: <span class="c-green">"t1"</span>, <span class="c-orange">"agent"</span>: <span class="c-green">"n8n-agent"</span>, <span class="c-orange">"task"</span>: <span class="c-green">"Crear nodo webhook"</span>, <span class="c-orange">"depends_on"</span>: [] },
+    { <span class="c-orange">"id"</span>: <span class="c-green">"t2"</span>, <span class="c-orange">"agent"</span>: <span class="c-green">"n8n-agent"</span>, <span class="c-orange">"task"</span>: <span class="c-green">"Agregar transform"</span>, <span class="c-orange">"depends_on"</span>: [<span class="c-green">"t1"</span>] }
+  ],
+  <span class="c-orange">"context"</span>: { <span class="c-orange">"api_docs"</span>: <span class="c-green">"..."</span>, <span class="c-orange">"credentials_ref"</span>: <span class="c-green">"env.CRM_KEY"</span> }
+}
+
+<span class="c-muted">/* Executor → Tester */</span>
+{
+  <span class="c-orange">"plan_id"</span>: <span class="c-green">"task-2024-001"</span>,
+  <span class="c-orange">"status"</span>: <span class="c-green">"completed"</span>,
+  <span class="c-orange">"artifacts"</span>: { <span class="c-orange">"workflow_json"</span>: <span class="c-green">"..."</span>, <span class="c-orange">"env_vars"</span>: [<span class="c-green">"CRM_KEY"</span>] },
+  <span class="c-orange">"notes"</span>: <span class="c-green">"Usé HTTP Request node porque Webhook tiene limitaciones en v1.2"</span>
+}
+
+<span class="c-muted">/* Tester → Documenter */</span>
+{
+  <span class="c-orange">"plan_id"</span>: <span class="c-green">"task-2024-001"</span>,
+  <span class="c-orange">"test_result"</span>: <span class="c-green">"PASSED"</span>,
+  <span class="c-orange">"issues"</span>: [],
+  <span class="c-orange">"approved_artifacts"</span>: { <span class="c-orange">"workflow_json"</span>: <span class="c-green">"..."</span> },
+  <span class="c-orange">"test_notes"</span>: <span class="c-green">"Validado contra 3 casos de prueba"</span>
+}</pre>
+  </div>
+
+  <h3 style="font-size:18px;font-weight:700;margin:28px 0 16px;">Patrones de orquestación</h3>
+  <div class="cards-grid">
+    <div class="card">
+      <span class="card-icon">⛓️</span>
+      <div class="card-title">Chain (Cadena Lineal)</div>
+      <div class="card-body">A → B → C → D<br><br>El output de cada agente es el input del siguiente. Simple y predecible. Ideal para pipelines donde cada paso depende del anterior.</div>
+    </div>
+    <div class="card">
+      <span class="card-icon">🌲</span>
+      <div class="card-title">Tree (Árbol de Tareas)</div>
+      <div class="card-body">Planner descompone en subtareas paralelas que distintos ejecutores resuelven, luego un merger une los resultados. Ideal para tareas independientes.</div>
+    </div>
+    <div class="card">
+      <span class="card-icon">🔄</span>
+      <div class="card-title">Loop (Ciclo de Refinamiento)</div>
+      <div class="card-body">Executor → Reviewer → (si falla) → Executor. El agente cicla hasta que el reviewer aprueba. Máximo N iteraciones para evitar loops infinitos.</div>
+    </div>
+    <div class="card">
+      <span class="card-icon">🎯</span>
+      <div class="card-title">Router (Enrutador)</div>
+      <div class="card-body">Un agente clasificador decide qué agente especialista activa. Ideal cuando no sabés de antemano qué tipo de tarea vas a recibir.</div>
+    </div>
+  </div>
+
+  <div class="highlight-box">
+    <div class="hl-title">// Claude Code + Ollama: cómo lanzar</div>
+    <p>Con <code>ollama run claude</code> o via Claude Code, cada agente vive en su directorio con su propio CLAUDE.md. Cambiás de directorio para cambiar de agente, o llamás directamente con el system prompt correspondiente en el script de orquestación.</p>
+  </div>
+</section>
+
+<!-- ===== 06 SKILLS ===== -->
+<section class="section" id="skills">
+  <div class="section-header">
+    <div class="section-tag">// 06</div>
+    <h2 class="section-title">Skills & Herramientas</h2>
+    <p class="section-desc">Las skills son capacidades concretas que le das al agente. Las herramientas son lo que el agente puede invocar.</p>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;">📁 Skills como archivos de conocimiento</h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Una skill es un documento de referencia que el agente puede consultar. No es código ejecutable, es conocimiento estructurado.</p>
+      <div class="code-block" style="margin-top:0;">
+        <pre><span class="c-purple">skills/</span>
+├── <span class="c-green">n8n-patterns.md</span>      <span class="c-muted"># Patrones N8N</span>
+├── <span class="c-green">api-integration.md</span>   <span class="c-muted"># Cómo integrar APIs</span>
+├── <span class="c-green">code-review.md</span>       <span class="c-muted"># Checklist de revisión</span>
+├── <span class="c-green">slide-design.md</span>      <span class="c-muted"># Principios visuales</span>
+└── <span class="c-green">documentation.md</span>     <span class="c-muted"># Estilo de docs</span></pre>
+      </div>
+    </div>
+    <div>
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;">🔧 Herramientas (tools) del agente</h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Lo que el agente puede hacer en el sistema. Dáselas con principio de mínimo privilegio.</p>
+      <div class="code-block" style="margin-top:0;">
+        <pre><span class="c-muted">Herramientas comunes:</span>
+
+<span class="c-green">read_file</span>       <span class="c-muted"># Leer archivos del proyecto</span>
+<span class="c-green">write_file</span>      <span class="c-muted"># Escribir/crear archivos</span>
+<span class="c-green">search_files</span>    <span class="c-muted"># Buscar en el proyecto</span>
+<span class="c-green">run_command</span>     <span class="c-muted"># Ejecutar comandos shell</span>
+<span class="c-green">web_search</span>      <span class="c-muted"># Buscar en internet</span>
+<span class="c-green">call_api</span>        <span class="c-muted"># Llamar APIs externas</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="font-size:18px;font-weight:700;margin:28px 0 16px;">Cómo referenciar skills en el CLAUDE.md</h3>
+  <div class="code-block">
+    <div class="code-label">// En el CLAUDE.md del agente</div>
+    <pre><span class="c-purple"># SKILLS DISPONIBLES</span>
+Antes de ejecutar cualquier tarea, consultá los siguientes archivos de referencia:
+
+- <span class="c-green">@skills/n8n-patterns.md</span>  → patrones de workflows aprobados
+- <span class="c-green">@skills/api-integration.md</span> → cómo estructurar llamadas API
+
+<span class="c-purple"># CUÁNDO USAR CADA SKILL</span>
+- Si la tarea implica crear un workflow: leer n8n-patterns.md primero
+- Si hay una integración de API externa: leer api-integration.md
+- Si hay duda sobre el enfoque: buscar en ambos antes de preguntar</pre>
+  </div>
+
+  <h3 style="font-size:18px;font-weight:700;margin:28px 0 16px;">Asignación de herramientas por tipo de agente</h3>
+  <div class="cards-grid">
+    <div class="card">
+      <div class="card-title">🧭 Planner</div>
+      <div class="card-body">
+        <span class="badge badge-green">read_file</span>
+        <span class="badge badge-green">search_files</span>
+        <span class="badge badge-green">web_search</span>
+        <br><br>El planner solo necesita <strong>leer e investigar</strong>. No escribe ni ejecuta.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">⚡ Executor</div>
+      <div class="card-body">
+        <span class="badge badge-orange">write_file</span>
+        <span class="badge badge-orange">run_command</span>
+        <span class="badge badge-orange">call_api</span>
+        <br><br>El executor necesita <strong>actuar</strong>. Tiene herramientas de escritura y ejecución.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔍 Tester</div>
+      <div class="card-body">
+        <span class="badge badge-purple">read_file</span>
+        <span class="badge badge-purple">run_command</span>
+        <span class="badge badge-purple">write_file</span>
+        <br><br>El tester lee, ejecuta tests y escribe el reporte. Scope acotado de escritura.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📄 Documenter</div>
+      <div class="card-body">
+        <span class="badge badge-pink">read_file</span>
+        <span class="badge badge-pink">write_file</span>
+        <br><br>El documenter solo lee el resultado final y escribe la documentación. Mínimas herramientas.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 07 PLANTILLAS ===== -->
+<section class="section" id="plantillas">
+  <div class="section-header">
+    <div class="section-tag">// 07</div>
+    <h2 class="section-title">Plantillas Listas para Usar</h2>
+    <p class="section-desc">CLAUDE.md base para cada tipo de agente. Copiá, personalizá, deploy.</p>
+  </div>
+
+  <div class="accordion">
+    <div class="accordion-header" onclick="toggleAccordion(this)">
+      <span class="accordion-title">🧭 Planner Agent — CLAUDE.md</span>
+      <span class="accordion-arrow">▶</span>
+    </div>
+    <div class="accordion-body">
+      <div class="code-label">// agents/planner/CLAUDE.md</div>
+      <pre style="font-family:'Space Mono',monospace;font-size:12px;line-height:1.8;color:var(--text);"># ROL
+Sos un Arquitecto de Tareas. Tu trabajo es analizar objetivos complejos
+y descomponerlos en subtareas ejecutables, claras y con dependencias explícitas.
+
+# OBJETIVO
+Dado un objetivo en lenguaje natural, producir un plan estructurado JSON
+que otros agentes puedan ejecutar sin ambigüedad.
+
+# PROCESO
+1. Identificar el objetivo principal
+2. Listar todos los pasos necesarios
+3. Identificar dependencias entre pasos
+4. Asignar cada paso al agente correcto
+5. Estimar complejidad (low/medium/high)
+
+# AGENTES DISPONIBLES
+- "n8n-agent": para workflows N8N
+- "code-agent": para scripts Python/JS
+- "slides-agent": para presentaciones
+- "reviewer-agent": para validación
+
+# OUTPUT FORMAT
+{
+  "plan_id": "uuid",
+  "objective": "string",
+  "estimated_complexity": "low|medium|high",
+  "subtasks": [
+    {
+      "id": "t1",
+      "agent": "agent-name",
+      "task": "descripción clara",
+      "expected_output": "qué debe producir",
+      "depends_on": [],
+      "context_needed": {}
+    }
+  ]
+}
+
+# RESTRICCIONES
+- No ejecutes ninguna tarea, solo planificá
+- Si el objetivo es ambiguo, listá las asunciones que hacés
+- Máximo 10 subtareas por plan; si hay más, creá sub-planes</pre>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="accordion-header" onclick="toggleAccordion(this)">
+      <span class="accordion-title">⚡ N8N Executor Agent — CLAUDE.md</span>
+      <span class="accordion-arrow">▶</span>
+    </div>
+    <div class="accordion-body">
+      <div class="code-label">// agents/n8n-agent/CLAUDE.md</div>
+      <pre style="font-family:'Space Mono',monospace;font-size:12px;line-height:1.8;color:var(--text);"># ROL
+Sos un especialista en N8N con conocimiento profundo de todos sus nodos,
+integraciones y patrones de workflows de automatización empresarial.
+
+# OBJETIVO
+Generar configuraciones JSON de workflows N8N válidas e importables,
+basadas en requisitos funcionales en lenguaje natural.
+
+# CONOCIMIENTO DE DOMINIO
+- N8N versión target: 1.x
+- Patrones aprobados: @skills/n8n-patterns.md
+- No hardcodear credenciales: siempre usar {{ $env.VARIABLE_NAME }}
+- Preferir nodos nativos sobre HTTP Request cuando existen
+
+# OUTPUT FORMAT
+Siempre:
+1. Descripción del workflow (3 líneas máx)
+2. ```json (workflow completo)```
+3. Lista de env vars requeridas
+4. Instrucciones de activación
+
+# MANEJO DE SCOPE
+- OUT_OF_SCOPE si la tarea requiere código Python, diseño, o documentación
+- NEEDS_INFO si faltan: URL de API, estructura de datos, credenciales ref</pre>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="accordion-header" onclick="toggleAccordion(this)">
+      <span class="accordion-title">🔍 Reviewer / Tester Agent — CLAUDE.md</span>
+      <span class="accordion-arrow">▶</span>
+    </div>
+    <div class="accordion-body">
+      <div class="code-label">// agents/reviewer-agent/CLAUDE.md</div>
+      <pre style="font-family:'Space Mono',monospace;font-size:12px;line-height:1.8;color:var(--text);"># ROL
+Sos un Revisor Crítico. Tu trabajo es evaluar outputs de otros agentes
+contra criterios de calidad definidos, sin ejecutar ni modificar el trabajo.
+
+# OBJETIVO
+Dado un artifact (código, workflow, documento), producir un veredicto
+estructurado con issues específicos y nivel de severidad.
+
+# CRITERIOS DE EVALUACIÓN
+Leer siempre: @skills/review-checklist.md
+
+Evaluar:
+- Corrección funcional (¿hace lo que dice?)
+- Seguridad (¿expone credenciales? ¿inputs sin validar?)
+- Mantenibilidad (¿es legible? ¿tiene comentarios?)
+- Consistencia con estándares del proyecto
+
+# OUTPUT FORMAT
+{
+  "verdict": "APPROVED | REJECTED | NEEDS_REVISION",
+  "score": 0-10,
+  "issues": [
+    {
+      "severity": "CRITICAL|HIGH|MEDIUM|LOW",
+      "location": "dónde está el problema",
+      "description": "qué está mal",
+      "suggestion": "cómo corregirlo"
+    }
+  ],
+  "approved_for_next_stage": true|false
+}
+
+# RESTRICCIONES
+- No modifiques el artifact, solo evaluá
+- Si es CRITICAL: verdict = REJECTED automáticamente
+- Sé específico: no "hay un bug", sino "línea X hace Y cuando debería Z"</pre>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="accordion-header" onclick="toggleAccordion(this)">
+      <span class="accordion-title">📄 Documenter Agent — CLAUDE.md</span>
+      <span class="accordion-arrow">▶</span>
+    </div>
+    <div class="accordion-body">
+      <div class="code-label">// agents/documenter-agent/CLAUDE.md</div>
+      <pre style="font-family:'Space Mono',monospace;font-size:12px;line-height:1.8;color:var(--text);"># ROL
+Sos un Technical Writer especializado en documentación clara y accionable.
+Tu audiencia: desarrolladores que necesitan usar el sistema, no construirlo.
+
+# OBJETIVO
+Dado un artifact aprobado y notas del proceso, generar documentación
+técnica completa en Markdown, lista para publicar.
+
+# ESTRUCTURA ESTÁNDAR
+1. Descripción (qué hace, en 1 párrafo)
+2. Requisitos previos
+3. Configuración (paso a paso)
+4. Uso (ejemplos concretos)
+5. Variables de entorno (tabla)
+6. Troubleshooting (los 3-5 errores más comunes)
+7. Changelog (si aplica)
+
+# ESTILO
+- Verbos en imperativo ("Configurá", "Ejecutá")
+- Ejemplos reales, no placeholders vagos
+- Tablas para variables y parámetros
+- Code blocks con syntax highlighting
+
+# INPUT ESPERADO
+{
+  "artifact": {...},           // El resultado del executor
+  "review_notes": {...},       // Notas del tester
+  "process_context": "..."     // Por qué se hicieron ciertas decisiones
+}</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 08 RECOMENDACIONES ===== -->
+<section class="section" id="recomendaciones">
+  <div class="section-header">
+    <div class="section-tag">// 08</div>
+    <h2 class="section-title">Recomendaciones Clave</h2>
+    <p class="section-desc">Las lecciones más importantes para diseñar agentes que realmente funcionen.</p>
+  </div>
+
+  <div class="rules-list">
+    <div class="rule-item">
+      <div class="rule-num">01</div>
+      <div class="rule-content">
+        <div class="rule-title">Versionar los CLAUDE.md como código</div>
+        <div class="rule-desc">Usá git para trackear cambios en los system prompts. Un cambio en el CLAUDE.md es un cambio de comportamiento del agente. Tratalos con el mismo rigor que el código fuente.</div>
+      </div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">02</div>
+      <div class="rule-content">
+        <div class="rule-title">Definir el output format primero</div>
+        <div class="rule-desc">Antes de escribir el system prompt, decidí exactamente qué formato de salida necesitás. El output format determina casi todo lo demás del diseño del agente.</div>
+      </div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">03</div>
+      <div class="rule-content">
+        <div class="rule-title">Empezar con un agente, no con diez</div>
+        <div class="rule-desc">Construí y refiná un agente hasta que funcione bien antes de agregar más. La tentación de diseñar el sistema completo de entrada lleva a complejidad prematura.</div>
+      </div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">04</div>
+      <div class="rule-content">
+        <div class="rule-title">Loguear las llamadas entre agentes</div>
+        <div class="rule-desc">Guardá en archivos el input y output de cada agente en cada corrida. Sin logs, es imposible debuggear dónde se rompió el pipeline. Un archivo JSON por run es suficiente.</div>
+      </div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">05</div>
+      <div class="rule-content">
+        <div class="rule-title">Temperatura baja para agentes de ejecución</div>
+        <div class="rule-desc">Para executors y reviewers, usá temperature 0 o 0.1. Para planners o agentes creativos, podés subir a 0.3-0.5. La consistencia es más valiosa que la creatividad en la mayoría de los casos.</div>
+      </div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">06</div>
+      <div class="rule-content">
+        <div class="rule-title">No pasar contexto que el agente no usa</div>
+        <div class="rule-desc">Cada token de contexto que el agente no necesita es ruido. El tester no necesita el plan original completo, solo el artifact que debe evaluar. Contexto mínimo, foco máximo.</div>
+      </div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">07</div>
+      <div class="rule-content">
+        <div class="rule-title">Diseñar para el fallo desde el inicio</div>
+        <div class="rule-desc">Define qué hace el pipeline si un agente devuelve un error. ¿Reintenta? ¿Notifica? ¿Pausa y espera input humano? El happy path es fácil, el manejo de errores es donde viven los bugs.</div>
+      </div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">08</div>
+      <div class="rule-content">
+        <div class="rule-title">Human-in-the-loop en decisiones críticas</div>
+        <div class="rule-desc">Para tareas irreversibles (deploy, envío de emails, modificación de base de datos), agregá un checkpoint humano antes de que el executor actúe. El agente presenta el plan, vos aprobás.</div>
+      </div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">09</div>
+      <div class="rule-content">
+        <div class="rule-title">Usar ejemplos (few-shot) en vez de instrucciones largas</div>
+        <div class="rule-desc">3 ejemplos de input/output bien elegidos superan a 500 palabras de instrucciones. Si tenés dificultades para que el agente entienda el formato, agregá un ejemplo antes de agregar más texto.</div>
+      </div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">10</div>
+      <div class="rule-content">
+        <div class="rule-title">Naming consistente para los agentes</div>
+        <div class="rule-desc">Usá un patrón: <code>[dominio]-[tipo]-v[version]</code>. Ejemplo: <code>n8n-executor-v1</code>, <code>code-reviewer-v2</code>. Cuando tengas 20 agentes, vas a agradecer la consistencia.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <h3 style="font-size:18px;font-weight:700;margin-bottom:20px;">Checklist antes de deployar un agente</h3>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px;">✅ CLAUDE.md tiene...</div>
+      <div class="card-body" style="line-height:2.2;">
+        □ Rol y persona clara<br>
+        □ Objetivo en una oración<br>
+        □ Scope explícito (incluye y excluye)<br>
+        □ Formato de output definido<br>
+        □ Al menos 1-2 ejemplos (few-shot)<br>
+        □ Manejo de errores / OUT_OF_SCOPE<br>
+        □ Referencias a skills relevantes
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px;">✅ El pipeline tiene...</div>
+      <div class="card-body" style="line-height:2.2;">
+        □ Contratos de input/output entre agentes<br>
+        □ Logging de cada llamada<br>
+        □ Manejo de errores definido<br>
+        □ Máximo de reintentos configurado<br>
+        □ Checkpoint humano en puntos críticos<br>
+        □ Tests con casos de ejemplo<br>
+        □ Documentación del flujo completo
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function toggleAccordion(header) {
+  const body = header.nextElementSibling;
+  const isOpen = header.classList.contains('open');
+  document.querySelectorAll('.accordion-header').forEach(h => h.classList.remove('open'));
+  document.querySelectorAll('.accordion-body').forEach(b => b.classList.remove('open'));
+  if (!isOpen) {
+    header.classList.add('open');
+    body.classList.add('open');
+  }
+}
+</script>
+</body>
+</html>

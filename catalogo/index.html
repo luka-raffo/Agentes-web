@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo Nuevos Negocios AI - Bidcom Style</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Archivo JS con los datos pre-cargados -->
+    <script src="data.js?v=20260611"></script>
+
+    <style>
+        :root {
+            --bidcom-blue: #003882;
+            --bidcom-yellow: #FFD100;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .bg-bidcom-blue { background-color: var(--bidcom-blue); }
+        .bg-bidcom-yellow { background-color: var(--bidcom-yellow); }
+        .text-bidcom-blue { color: var(--bidcom-blue); }
+        .text-bidcom-yellow { color: var(--bidcom-yellow); }
+        .border-bidcom-blue { border-color: var(--bidcom-blue); }
+        .border-bidcom-yellow { border-color: var(--bidcom-yellow); }
+        
+        .product-card { transition: all 0.3s ease; }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 56, 130, 0.15);
+        }
+    </style>
+</head>
+<body class="text-gray-800 min-h-screen flex flex-col">
+
+    <!-- Header Bidcom Style -->
+    <header class="bg-bidcom-blue shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <div class="font-black text-3xl text-white tracking-tight italic">BIDCOM <span class="text-bidcom-yellow text-xs align-top font-bold uppercase not-italic">Catálogo</span></div>
+            </div>
+            <div class="flex-1 w-full max-w-2xl mx-4">
+                <div class="relative flex">
+                    <input type="text" id="search-input" placeholder="Buscar por título..." class="w-full rounded-l-md py-3 px-4 text-gray-700 outline-none focus:ring-2 focus:ring-bidcom-yellow shadow-inner border-0">
+                    <button class="px-6 bg-bidcom-yellow hover:bg-yellow-500 rounded-r-md transition-colors text-black font-semibold shadow-inner" onclick="applyFilters()">
+                        Buscar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 flex-1 flex flex-col lg:flex-row gap-8">
+        
+        <!-- Sidebar Filtros -->
+        <aside class="w-full lg:w-1/4 bg-white p-6 rounded-lg shadow-sm border border-gray-200 h-fit sticky top-28">
+            <h2 class="text-xl font-bold mb-6 text-bidcom-blue border-b-2 border-bidcom-yellow pb-2 inline-block">Filtros</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Nivel 1 (L1)</label>
+                    <select id="filter-l1" class="w-full rounded p-2 border bg-white shadow-sm text-sm"><option value="">Todos</option></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Nivel 2 (L2)</label>
+                    <select id="filter-l2" class="w-full rounded p-2 border bg-white shadow-sm text-sm" disabled><option value="">Todos</option></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Nivel 3 (L3)</label>
+                    <select id="filter-l3" class="w-full rounded p-2 border bg-white shadow-sm text-sm" disabled><option value="">Todos</option></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Categoría Final</label>
+                    <select id="filter-categoria" class="w-full rounded p-2 border bg-white shadow-sm text-sm" disabled><option value="">Todas</option></select>
+                </div>
+            </div>
+            
+            <button id="btn-reset" class="mt-6 w-full py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded font-semibold text-sm transition-colors">
+                Limpiar Filtros
+            </button>
+        </aside>
+
+        <!-- Cuadrícula de Resultados -->
+        <section class="w-full lg:w-3/4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 border-b border-gray-200 pb-4 gap-4">
+                <h1 class="text-3xl font-black text-gray-800 tracking-tight" id="results-title">Catálogo Completo</h1>
+                <span class="text-sm bg-blue-100 text-bidcom-blue px-3 py-1 rounded-full font-semibold" id="results-count">Cargando...</span>
+            </div>
+
+            <div id="empty-state" class="hidden flex-col items-center justify-center py-32 text-center bg-white rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-xl font-bold text-gray-700 mb-2">No hay resultados</h3>
+                <p class="text-gray-500">Prueba con otros filtros o texto de búsqueda.</p>
+            </div>
+
+            <div id="categories-container" class="space-y-16">
+                <!-- Javascript inyectará aquí -->
+            </div>
+        </section>
+    </main>
+
+    <!-- JS Logic -->
+    <script>
+        // Variables
+        let allData = typeof excelData !== 'undefined' ? excelData : [];
+        let filteredData = [...allData];
+
+        const selL1 = document.getElementById('filter-l1');
+        const selL2 = document.getElementById('filter-l2');
+        const selL3 = document.getElementById('filter-l3');
+        const selCat = document.getElementById('filter-categoria');
+        const searchInput = document.getElementById('search-input');
+        const container = document.getElementById('categories-container');
+
+        // Utils
+        function getUnique(arr, key) {
+            return [...new Set(arr.map(item => item[key]).filter(Boolean))].sort();
+        }
+
+        function populateSelect(selectElem, options) {
+            selectElem.innerHTML = '<option value="">Todos</option>';
+            options.forEach(opt => {
+                selectElem.innerHTML += `<option value="${opt}">${opt}</option>`;
+            });
+            selectElem.disabled = options.length === 0;
+        }
+
+        // Setup Filters
+        function initFilters() {
+            populateSelect(selL1, getUnique(allData, 'L1'));
+            
+            selL1.addEventListener('change', () => {
+                const l1Val = selL1.value;
+                const subset = l1Val ? allData.filter(p => p.L1 === l1Val) : allData;
+                populateSelect(selL2, getUnique(subset, 'L2'));
+                selL3.disabled = true; selCat.disabled = true;
+                selL3.innerHTML = '<option value="">Todos</option>';
+                selCat.innerHTML = '<option value="">Todas</option>';
+                applyFilters();
+            });
+
+            selL2.addEventListener('change', () => {
+                const subset = allData.filter(p => (!selL1.value || p.L1 === selL1.value) && p.L2 === selL2.value);
+                populateSelect(selL3, getUnique(subset, 'L3'));
+                selCat.disabled = true;
+                selCat.innerHTML = '<option value="">Todas</option>';
+                applyFilters();
+            });
+
+            selL3.addEventListener('change', () => {
+                const subset = allData.filter(p => (!selL1.value || p.L1 === selL1.value) && (!selL2.value || p.L2 === selL2.value) && p.L3 === selL3.value);
+                populateSelect(selCat, getUnique(subset, 'Categoria'));
+                applyFilters();
+            });
+
+            selCat.addEventListener('change', applyFilters);
+            searchInput.addEventListener('input', applyFilters);
+        }
+
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            selL1.value = ""; selL2.disabled = true; selL3.disabled = true; selCat.disabled = true;
+            searchInput.value = "";
+            applyFilters();
+        });
+
+        // Filter & Render
+        function applyFilters() {
+            const searchVal = searchInput.value.toLowerCase();
+            filteredData = allData.filter(p => {
+                const matchL1 = !selL1.value || p.L1 === selL1.value;
+                const matchL2 = !selL2.value || p.L2 === selL2.value;
+                const matchL3 = !selL3.value || p.L3 === selL3.value;
+                const matchCat = !selCat.value || p.Categoria === selCat.value;
+                const matchText = !searchVal || (p.Titulo && p.Titulo.toLowerCase().includes(searchVal));
+                return matchL1 && matchL2 && matchL3 && matchCat && matchText;
+            });
+            render();
+        }
+
+        function extractMlaId(link) {
+            if (!link) return null;
+            const match = link.match(/MLA-?\d+/);
+            if (match) return match[0].replace('-', '');
+            // Alternative URL format checking
+            const parts = link.split('/');
+            for(let p of parts) {
+                if(p.startsWith('MLA')) return p;
+            }
+            return null;
+        }
+
+        function render() {
+            container.innerHTML = '';
+            document.getElementById('results-count').innerText = `${filteredData.length} Productos`;
+            const empty = document.getElementById('empty-state');
+            
+            if(filteredData.length === 0) {
+                empty.classList.remove('hidden');
+                empty.classList.add('flex');
+                return;
+            } else {
+                empty.classList.add('hidden');
+                empty.classList.remove('flex');
+            }
+
+            // Agrupar por categoria
+            const grouped = {};
+            filteredData.forEach(p => {
+                const c = p.Categoria || 'General';
+                if(!grouped[c]) grouped[c] = [];
+                grouped[c].push(p);
+            });
+
+            // Draw HTML
+            Object.keys(grouped).sort().forEach(cat => {
+                const block = document.createElement('div');
+                block.className = 'bg-white p-6 rounded-xl shadow-sm border border-gray-200';
+                
+                // Head
+                const head = document.createElement('div');
+                head.className = 'flex items-center gap-3 mb-6 pb-4 border-b border-gray-100';
+                head.innerHTML = `
+                    <h2 class="text-2xl font-black text-gray-800 tracking-tight">${cat}</h2>
+                    <span class="bg-bidcom-yellow text-black text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">Top 5</span>
+                `;
+                block.appendChild(head);
+
+                // Grid
+                const grid = document.createElement('div');
+                grid.className = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4';
+                
+                // Items (max 5)
+                const items = grouped[cat].slice(0, 5);
+                items.forEach((p, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'product-card bg-white rounded-lg border border-gray-200 overflow-hidden relative flex flex-col h-full hover:shadow-xl';
+                    
+                    const mla = extractMlaId(p.Link);
+                    // Use ML API for image if possible, otherwise placeholder
+                    const imgUrl = p.Imagen ? p.Imagen : 'https://via.placeholder.com/200?text=Cargando...';
+                    const imgId = `img-${Math.random().toString(36).substr(2, 9)}`;
+
+                    card.innerHTML = `
+                        <div class="absolute top-2 left-2 z-10">
+                            <span class="bg-bidcom-blue text-white text-xs font-bold h-7 w-7 flex items-center justify-center rounded-full shadow-md border-2 border-white">${idx + 1}</span>
+                        </div>
+                        <div class="aspect-square bg-white flex items-center justify-center p-6 relative overflow-hidden">
+                            <img id="${imgId}" src="${imgUrl}" class="object-contain w-full h-full transition-transform duration-500 hover:scale-110" onerror="this.src='https://via.placeholder.com/200?text=Sin+Imagen'">
+                        </div>
+                        <div class="p-4 flex-1 flex flex-col bg-gray-50/50">
+                            <h3 class="text-sm text-gray-800 leading-snug line-clamp-3 mb-3 font-semibold" title="${p.Titulo}">${p.Titulo || 'Sin título'}</h3>
+                            <div class="mt-auto">
+                                <a href="${p.Link}" target="_blank" class="block w-full py-2 bg-white border border-bidcom-blue text-bidcom-blue text-center font-bold text-sm rounded shadow-sm hover:bg-bidcom-blue hover:text-white transition-colors">Ver Oferta</a>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+
+                    // Fetch Image from ML API if no direct image in Excel
+                    if (!p.Imagen && mla) {
+                        fetch(`https://api.mercadolibre.com/items/${mla}`)
+                            .then(res => res.json())
+                            .then(data => {
+                                if(data.pictures && data.pictures.length > 0) {
+                                    document.getElementById(imgId).src = data.pictures[0].secure_url;
+                                } else {
+                                    document.getElementById(imgId).src = 'https://via.placeholder.com/200?text=Sin+Imagen';
+                                }
+                            }).catch(() => {
+                                document.getElementById(imgId).src = 'https://via.placeholder.com/200?text=Error';
+                            });
+                    }
+                });
+                
+                block.appendChild(grid);
+                container.appendChild(block);
+            });
+        }
+
+        // Init
+        if(allData.length > 0) {
+            initFilters();
+            render();
+        } else {
+            container.innerHTML = '<div class="text-center text-red-500 p-10 font-bold">Error: No se cargaron datos. Ejecuta el script generate_data.py primero.</div>';
+        }
+    </script>
+</body>
+</html>
