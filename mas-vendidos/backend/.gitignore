@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Perfiles de navegador y HTML de debug (se regeneran)
+browser_profile/
+chrome_profile/
+debug/
+
+# Binarios pesados (cloudflared se descarga aparte, ver README)
+*.exe
+
+# Secretos (este proyecto NO usa, pero por las dudas)
+.env
+.env.*
+
+# Salidas generadas (descomentar si no querés versionarlas)
+# resultados_l1.json
+# resultados_l1.xlsx

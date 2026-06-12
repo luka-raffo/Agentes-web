@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Más vendidos MercadoLibre — a demanda</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+<div class="max-w-6xl mx-auto p-6">
+  <header class="mb-6">
+    <a href="../" class="text-sm text-blue-600 hover:underline">← Volver al portal</a>
+    <h1 class="text-3xl font-black text-gray-800 mt-2">🔥 Más vendidos en MercadoLibre</h1>
+    <p class="text-gray-500 text-sm">Elegí una categoría y traé su ranking de productos más vendidos en vivo.</p>
+  </header>
+
+  <!-- Config del backend (URL del tunel) -->
+  <div class="bg-white p-4 rounded-xl shadow mb-6">
+    <label class="block text-xs font-semibold text-gray-600 mb-1">URL del backend (la que te da tunnel.bat, ej. https://algo.trycloudflare.com)</label>
+    <div class="flex flex-wrap gap-2">
+      <input id="api" type="text" placeholder="http://127.0.0.1:8000"
+             class="flex-1 min-w-[260px] border border-gray-300 rounded-lg px-3 py-2 text-sm">
+      <button id="save" class="bg-gray-700 text-white px-4 py-2 rounded-lg text-sm">Guardar</button>
+    </div>
+    <p id="apistate" class="text-xs text-gray-400 mt-1"></p>
+  </div>
+
+  <!-- Selector de categoria -->
+  <div class="flex flex-wrap gap-2 items-center mb-6">
+    <select id="cat" class="flex-1 min-w-[260px] border border-gray-300 rounded-lg px-3 py-2"></select>
+    <button id="go" class="bg-blue-700 hover:bg-blue-800 text-white px-5 py-2 rounded-lg font-semibold">Buscar más vendidos</button>
+    <span id="status" class="text-sm text-gray-500"></span>
+  </div>
+
+  <div id="grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+// URL del backend: persistida en el navegador
+let API = localStorage.getItem("meli_api") || "http://127.0.0.1:8000";
+$("api").value = API;
+
+$("save").onclick = () => {
+  API = $("api").value.trim().replace(/\/+$/, "");
+  localStorage.setItem("meli_api", API);
+  $("apistate").textContent = "Guardado: " + API;
+  cargarCategorias();
+};
+
+async function cargarCategorias() {
+  $("cat").innerHTML = "";
+  try {
+    const r = await fetch(`${API}/categorias`);
+    const cats = await r.json();
+    $("cat").innerHTML = cats.map(c => `<option value="${c.id}">${c.nombre} (${c.id})</option>`).join("");
+    $("apistate").textContent = "Conectado a " + API;
+  } catch (e) {
+    $("apistate").textContent = "⚠ No se pudo conectar a " + API + ". ¿Está corriendo start.bat + tunnel.bat?";
+  }
+}
+
+async function buscar() {
+  const id = $("cat").value;
+  if (!id) return;
+  $("go").disabled = true;
+  $("grid").innerHTML = "";
+  $("status").textContent = "Buscando… (puede tardar unos segundos)";
+  try {
+    const r = await fetch(`${API}/mas-vendidos/${id}`);
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      $("status").textContent = "Error " + r.status + ": " + (err.detail || "no disponible");
+      return;
+    }
+    const data = await r.json();
+    $("status").textContent = `${data.cantidad} productos · ${data.categoria}` + (data.cacheado ? " (cache)" : "");
+    $("grid").innerHTML = data.productos.map(p => `
+      <div class="bg-white rounded-xl shadow overflow-hidden flex flex-col">
+        <img src="${p.imagen || ''}" class="w-full h-40 object-contain bg-gray-50" onerror="this.style.visibility='hidden'">
+        <div class="p-3 flex flex-col gap-1">
+          <span class="text-xs font-bold text-blue-700">#${p.ranking} más vendido</span>
+          <a href="${p.link}" target="_blank" class="text-sm text-gray-800 hover:text-blue-700 leading-tight line-clamp-3">${p.titulo}</a>
+          <span class="text-lg font-semibold text-gray-900">$${p.precio}</span>
+          <span class="text-xs text-green-600">${p.vendedor || ''}</span>
+        </div>
+      </div>`).join("");
+  } catch (e) {
+    $("status").textContent = "⚠ Error de conexión con el backend.";
+  } finally {
+    $("go").disabled = false;
+  }
+}
+
+$("go").onclick = buscar;
+cargarCategorias();
+</script>
+</body>
+</html>
