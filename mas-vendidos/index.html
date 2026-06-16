@@ -3,80 +3,125 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Más vendidos MercadoLibre — a demanda</title>
+<meta name="theme-color" content="#0E2E57">
+<title>Más vendidos · Bidcom</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: {
+      bidcom: { DEFAULT: "#123E74", dark: "#0E2E57", light: "#1B5BA8", soft: "#E8EEF7" },
+      acento: { DEFAULT: "#FFC20E", dark: "#E6A800" },
+    },
+    boxShadow: { card: "0 1px 3px rgba(16,37,87,.08), 0 6px 16px rgba(16,37,87,.06)" },
+    fontFamily: { sans: ['Inter', 'system-ui', 'Segoe UI', 'Arial', 'sans-serif'] },
+  } }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  .line-clamp-2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .card-hover { transition: transform .15s ease, box-shadow .15s ease; }
+  .card-hover:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(16,37,87,.16); }
+  select, input { outline: none; }
+  select:focus, input:focus { border-color:#1B5BA8; box-shadow:0 0 0 3px rgba(27,91,168,.15); }
+  ::-webkit-scrollbar { width:10px; height:10px; }
+  ::-webkit-scrollbar-thumb { background:#c7d2e3; border-radius:6px; }
+  .spin { animation: sp 0.8s linear infinite; } @keyframes sp { to { transform: rotate(360deg); } }
+</style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-<div class="max-w-6xl mx-auto p-6">
-  <header class="mb-6">
-    <a href="../" class="text-sm text-blue-600 hover:underline">← Volver al portal</a>
-    <h1 class="text-3xl font-black text-gray-800 mt-2">🔥 Más vendidos en MercadoLibre</h1>
-    <p class="text-gray-500 text-sm">Elegí una categoría y traé su ranking de productos más vendidos en vivo.</p>
-  </header>
+<body class="bg-[#F4F6FA] text-[#1B2430] font-sans min-h-screen">
 
-  <!-- Config del backend (URL del tunel) -->
-  <div class="bg-white p-4 rounded-xl shadow mb-6">
-    <label class="block text-xs font-semibold text-gray-600 mb-1">URL del backend (la que te da tunnel.bat, ej. https://algo.trycloudflare.com)</label>
-    <div class="flex flex-wrap gap-2">
-      <input id="api" type="text" placeholder="http://127.0.0.1:8000"
-             class="flex-1 min-w-[260px] border border-gray-300 rounded-lg px-3 py-2 text-sm">
-      <button id="save" class="bg-gray-700 text-white px-4 py-2 rounded-lg text-sm">Guardar</button>
+<!-- Header -->
+<header class="bg-bidcom-dark text-white sticky top-0 z-20 shadow-lg">
+  <div class="max-w-6xl mx-auto px-5 py-3 flex items-center gap-3">
+    <div class="flex items-center gap-2">
+      <span class="text-2xl font-extrabold tracking-tight">bidcom</span>
+      <span class="w-2 h-2 rounded-full bg-acento inline-block mb-3"></span>
     </div>
-    <p id="apistate" class="text-xs text-gray-400 mt-1"></p>
+    <span class="h-6 w-px bg-white/25"></span>
+    <span class="text-sm text-white/80">Más vendidos de MercadoLibre · a demanda</span>
+    <a href="../" class="ml-auto text-xs text-white/70 hover:text-white">← Portal</a>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-5 py-6">
+
+  <!-- Titulo -->
+  <div class="mb-5">
+    <h1 class="text-2xl sm:text-3xl font-extrabold text-bidcom-dark flex items-center gap-2">
+      🔥 Ranking de productos más vendidos
+    </h1>
+    <p class="text-gray-500 text-sm mt-1">Elegí país y categoría para traer el top de ventas en vivo, con precio, descuento, rating y unidades vendidas.</p>
   </div>
 
-  <!-- Selector de categoria -->
-  <div class="flex flex-col gap-2 mb-6">
-    <div class="flex flex-wrap gap-2 items-center">
-      <select id="pais" class="border border-gray-300 rounded-lg px-3 py-2 font-semibold">
+  <!-- Config backend -->
+  <details class="bg-white rounded-xl shadow-card mb-4 border border-gray-100">
+    <summary class="cursor-pointer px-4 py-2.5 text-sm font-semibold text-bidcom flex items-center gap-2 select-none">
+      ⚙️ Conexión al backend <span id="apistate" class="font-normal text-xs text-gray-400 ml-2"></span>
+    </summary>
+    <div class="px-4 pb-4 pt-1">
+      <label class="block text-xs text-gray-500 mb-1">URL del backend (la que te da <code>tunnel.bat</code>)</label>
+      <div class="flex flex-wrap gap-2">
+        <input id="api" type="text" placeholder="http://127.0.0.1:8000"
+               class="flex-1 min-w-[260px] border border-gray-300 rounded-lg px-3 py-2 text-sm">
+        <button id="save" class="bg-bidcom hover:bg-bidcom-light text-white px-4 py-2 rounded-lg text-sm font-semibold transition">Guardar</button>
+      </div>
+    </div>
+  </details>
+
+  <!-- Controles -->
+  <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-4 sm:p-5 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] gap-3 mb-3">
+      <select id="pais" class="border border-gray-300 rounded-lg px-3 py-2.5 font-semibold text-bidcom-dark bg-bidcom-soft">
         <option value="AR">🇦🇷 Argentina</option>
         <option value="MX">🇲🇽 México</option>
         <option value="UY">🇺🇾 Uruguay</option>
       </select>
       <input id="filtro" type="text" placeholder="🔎 Filtrar categoría por nombre o ID (ej. Audio, MLA1000)…"
-             class="flex-1 min-w-[240px] border border-gray-300 rounded-lg px-3 py-2">
-      <select id="nivel" class="border border-gray-300 rounded-lg px-3 py-2">
+             class="border border-gray-300 rounded-lg px-3 py-2.5">
+      <select id="nivel" class="border border-gray-300 rounded-lg px-3 py-2.5">
         <option value="todas">Todos los niveles</option>
         <option value="l1">Solo L1 (raíz)</option>
         <option value="l2">Solo L2</option>
         <option value="l3">Solo L3</option>
       </select>
     </div>
-    <div class="flex flex-wrap gap-2 items-center">
-      <select id="cat" size="8" class="flex-1 min-w-[260px] border border-gray-300 rounded-lg px-3 py-2"></select>
-    </div>
-    <div class="flex flex-wrap gap-2 items-center">
-      <button id="go" class="bg-blue-700 hover:bg-blue-800 text-white px-5 py-2 rounded-lg font-semibold">Buscar más vendidos</button>
-      <a id="verlink" href="#" target="_blank" class="hidden text-sm text-blue-600 hover:underline">🔗 Ver esta categoría en MercadoLibre</a>
+    <select id="cat" size="8" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3"></select>
+    <div class="flex flex-wrap gap-3 items-center">
+      <button id="go" class="bg-acento hover:bg-acento-dark text-bidcom-dark px-6 py-2.5 rounded-lg font-bold shadow-sm transition flex items-center gap-2">
+        Buscar más vendidos
+      </button>
+      <a id="verlink" href="#" target="_blank" class="hidden text-sm text-bidcom hover:underline font-medium">🔗 Ver esta categoría en MercadoLibre</a>
       <span id="count" class="text-xs text-gray-400"></span>
-      <span id="status" class="text-sm text-gray-500"></span>
+      <span id="status" class="text-sm text-gray-600 ml-auto"></span>
     </div>
   </div>
 
-  <div id="grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4"></div>
-</div>
+  <div id="grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4"></div>
+
+  <footer class="text-center text-xs text-gray-400 mt-10 pb-6">
+    Hecho para <span class="font-semibold text-bidcom">Bidcom</span> · datos en vivo de MercadoLibre
+  </footer>
+</main>
 
 <script>
 const $ = id => document.getElementById(id);
-// URL del backend: persistida en el navegador
 let API = localStorage.getItem("meli_api") || "http://127.0.0.1:8000";
 $("api").value = API;
 
 $("save").onclick = () => {
   API = $("api").value.trim().replace(/\/+$/, "");
   localStorage.setItem("meli_api", API);
-  $("apistate").textContent = "Guardado: " + API;
   cargarCategorias();
 };
 
-let CATS = [];                 // catalogo completo en memoria
+let CATS = [];
 const NIVEL_ORDEN = { L1: 0, L2: 1, L3: 2 };
 const esc = s => (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-// Link a la pagina de mas vendidos segun el prefijo del ID
 const DOMINIOS = { MLM: "com.mx", MLU: "com.uy", MLA: "com.ar" };
-const urlMasVendidos = id =>
-  `https://www.mercadolibre.${DOMINIOS[id.slice(0,3)] || "com.ar"}/mas-vendidos/${id}`;
+const urlMasVendidos = id => `https://www.mercadolibre.${DOMINIOS[id.slice(0,3)] || "com.ar"}/mas-vendidos/${id}`;
 
 function actualizarLink() {
   const id = $("cat").value;
@@ -88,15 +133,16 @@ function actualizarLink() {
 async function cargarCategorias() {
   $("cat").innerHTML = "";
   try {
-    const pais = $("pais").value;
-    const r = await fetch(`${API}/categorias?pais=${pais}&nivel=todas`);
+    const r = await fetch(`${API}/categorias?pais=${$("pais").value}&nivel=todas`);
     CATS = await r.json();
     CATS.sort((a, b) => (NIVEL_ORDEN[a.nivel] - NIVEL_ORDEN[b.nivel]) ||
                         (a.ruta || a.nombre).localeCompare(b.ruta || b.nombre));
-    $("apistate").textContent = "Conectado a " + API + " · " + CATS.length + " categorías";
+    $("apistate").textContent = "✓ conectado · " + CATS.length + " categorías";
+    $("apistate").className = "font-normal text-xs text-green-600 ml-2";
     renderOpciones();
   } catch (e) {
-    $("apistate").textContent = "⚠ No se pudo conectar a " + API + ". ¿Está corriendo start.bat + tunnel.bat?";
+    $("apistate").textContent = "⚠ sin conexión a " + API;
+    $("apistate").className = "font-normal text-xs text-red-500 ml-2";
   }
 }
 
@@ -107,54 +153,63 @@ function renderOpciones() {
   if (niv !== "todas") lista = lista.filter(c => c.nivel.toLowerCase() === niv);
   if (q) lista = lista.filter(c =>
     (c.ruta || c.nombre).toLowerCase().includes(q) || c.id.toLowerCase().includes(q));
-
-  const MAX = 1000; // limita el render para que el navegador no sufra
-  const recortada = lista.slice(0, MAX);
-  $("cat").innerHTML = recortada.map(c =>
+  const MAX = 1000;
+  $("cat").innerHTML = lista.slice(0, MAX).map(c =>
     `<option value="${c.id}">[${c.nivel}] ${esc(c.ruta || c.nombre)} · ${c.id}</option>`).join("");
   $("count").textContent = lista.length + " categorías" +
     (lista.length > MAX ? ` (mostrando ${MAX}, refiná el filtro)` : "");
   actualizarLink();
 }
 
+function tarjeta(p) {
+  const m = p.moneda || "$";
+  const top = p.ranking <= 3;
+  const badge = top
+    ? `<span class="absolute top-2 left-2 bg-acento text-bidcom-dark text-xs font-extrabold px-2 py-0.5 rounded-full shadow">🏆 #${p.ranking}</span>`
+    : `<span class="absolute top-2 left-2 bg-bidcom text-white text-xs font-bold px-2 py-0.5 rounded-full">#${p.ranking}</span>`;
+  const desc = p.descuento ? `<span class="absolute top-2 right-2 bg-green-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">${esc(p.descuento)}</span>` : "";
+  return `
+  <div class="bg-white rounded-xl shadow-card border border-gray-100 overflow-hidden flex flex-col card-hover">
+    <div class="relative bg-gray-50">
+      ${badge}${desc}
+      <img src="${p.imagen || ''}" loading="lazy" class="w-full h-40 object-contain" onerror="this.style.visibility='hidden'">
+    </div>
+    <div class="p-3 flex flex-col gap-1.5 flex-1">
+      <a href="${p.link}" target="_blank" class="text-sm text-gray-800 hover:text-bidcom font-medium leading-snug line-clamp-2 min-h-[2.5rem]">${esc(p.titulo)}</a>
+      <div class="flex items-baseline gap-2 flex-wrap">
+        <span class="text-lg font-extrabold text-bidcom-dark">${m}${p.precio}</span>
+        ${p.precio_original ? `<span class="text-xs text-gray-400 line-through">${m}${p.precio_original}</span>` : ""}
+      </div>
+      ${p.cuotas ? `<span class="text-[11px] text-gray-500">${esc(p.cuotas)}</span>` : ""}
+      ${p.envio ? `<span class="text-[11px] text-green-700 font-medium">${esc(p.envio)}</span>` : ""}
+      <div class="flex items-center gap-2 flex-wrap mt-auto pt-1">
+        ${p.rating ? `<span class="text-[11px] text-gray-600">⭐ ${esc(p.rating)}</span>` : ""}
+        ${p.vendidos ? `<span class="text-[11px] font-semibold text-bidcom bg-bidcom-soft px-1.5 py-0.5 rounded">${esc(p.vendidos)}</span>` : ""}
+      </div>
+      ${p.vendedor ? `<span class="text-[11px] text-gray-400 truncate">Vendedor: ${esc(p.vendedor)}</span>` : ""}
+    </div>
+  </div>`;
+}
+
 async function buscar() {
   const id = $("cat").value;
-  if (!id) return;
+  if (!id) { $("status").textContent = "Elegí una categoría."; return; }
   $("go").disabled = true;
   $("grid").innerHTML = "";
-  $("status").textContent = "Buscando… (puede tardar unos segundos)";
+  $("status").innerHTML = `<span class="inline-block w-3 h-3 border-2 border-bidcom border-t-transparent rounded-full spin align-middle"></span> Buscando…`;
   try {
     const r = await fetch(`${API}/mas-vendidos/${id}`);
     if (!r.ok) {
       const err = await r.json().catch(() => ({}));
-      $("status").textContent = "Error " + r.status + ": " + (err.detail || "no disponible");
+      $("status").textContent = "⚠ Error " + r.status + ": " + (err.detail || "no disponible");
       return;
     }
     const data = await r.json();
     $("status").textContent = `${data.cantidad} productos · ${data.categoria}` + (data.cacheado ? " (cache)" : "");
-    // link de validacion: abrir la pagina real de mas vendidos
     if (data.url) { $("verlink").href = data.url; $("verlink").classList.remove("hidden"); }
-    const m = p => p.moneda || "$";
-    $("grid").innerHTML = data.productos.map(p => `
-      <div class="bg-white rounded-xl shadow overflow-hidden flex flex-col">
-        <img src="${p.imagen || ''}" class="w-full h-40 object-contain bg-gray-50" onerror="this.style.visibility='hidden'">
-        <div class="p-3 flex flex-col gap-1">
-          <span class="text-xs font-bold text-blue-700">#${p.ranking} más vendido</span>
-          <a href="${p.link}" target="_blank" class="text-sm text-gray-800 hover:text-blue-700 leading-tight line-clamp-3">${p.titulo}</a>
-          <div class="flex items-baseline gap-2 flex-wrap">
-            <span class="text-lg font-semibold text-gray-900">${m(p)}${p.precio}</span>
-            ${p.precio_original ? `<span class="text-xs text-gray-400 line-through">${m(p)}${p.precio_original}</span>` : ""}
-            ${p.descuento ? `<span class="text-xs text-green-600 font-semibold">${p.descuento}</span>` : ""}
-          </div>
-          ${p.cuotas ? `<span class="text-xs text-gray-500">${p.cuotas}</span>` : ""}
-          <div class="text-xs text-gray-500 flex gap-2 flex-wrap">
-            ${p.rating ? `<span>⭐ ${p.rating}</span>` : ""}
-            ${p.vendidos ? `<span>· ${p.vendidos}</span>` : ""}
-          </div>
-          ${p.envio ? `<span class="text-xs text-green-700">${p.envio}</span>` : ""}
-          ${p.vendedor ? `<span class="text-xs text-gray-500">Vendedor: ${p.vendedor}</span>` : ""}
-        </div>
-      </div>`).join("");
+    $("grid").innerHTML = data.productos.map(tarjeta).join("");
+    if (!data.productos.length)
+      $("grid").innerHTML = `<p class="col-span-full text-center text-gray-400 py-10">Esta categoría no devolvió productos.</p>`;
   } catch (e) {
     $("status").textContent = "⚠ Error de conexión con el backend.";
   } finally {
