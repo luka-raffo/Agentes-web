@@ -23,20 +23,19 @@ URL_TPL = "https://www.mercadolibre.com.ar/mas-vendidos/{cat_id}"  # compat
 BLOCK_MARKERS = ("suspicious-traffic", "verifyChallenge", "account-verification",
                  "micro-landing-container")
 
-# Sitio por prefijo de ID: MLA=Argentina, MLM=Mexico, MLU=Uruguay.
-SITIOS = {"MLA": "com.ar", "MLM": "com.mx", "MLU": "com.uy"}
-PAIS_DE_PREFIJO = {"MLA": "AR", "MLM": "MX", "MLU": "UY"}
-
-
-def dominio_de(cat_id):
-    for pref, dom in SITIOS.items():
-        if cat_id.startswith(pref):
-            return dom
-    return "com.ar"
+# Base de "mas vendidos" por prefijo de ID.
+# OJO Brasil: dominio mercadoLIVRE (no libre) y ruta MAIS-vendidos (no mas-).
+SITIOS = {
+    "MLA": "https://www.mercadolibre.com.ar/mas-vendidos/",
+    "MLM": "https://www.mercadolibre.com.mx/mas-vendidos/",
+    "MLU": "https://www.mercadolibre.com.uy/mas-vendidos/",
+    "MLB": "https://www.mercadolivre.com.br/mais-vendidos/",
+}
+PAIS_DE_PREFIJO = {"MLA": "AR", "MLM": "MX", "MLU": "UY", "MLB": "BR"}
 
 
 def url_mas_vendidos(cat_id):
-    return f"https://www.mercadolibre.{dominio_de(cat_id)}/mas-vendidos/{cat_id}"
+    return SITIOS.get(cat_id[:3], SITIOS["MLA"]) + cat_id
 
 
 # ----------------------- Categorias -----------------------
@@ -172,7 +171,7 @@ def parsear_productos(html):
              or card.select_one("h2.poly-component__title a")
              or card.select_one("a.ui-search-link"))
         if not a:
-            a = card.find("a", href=re.compile(r"mercadolibre|MLA"))
+            a = card.find("a", href=re.compile(r"mercadoli[bv]re|ML[ABMU]\d"))
         if not a:
             continue
         titulo = _txt(a) or a.get("title", "")
@@ -180,9 +179,9 @@ def parsear_productos(html):
         if not titulo or not link:
             continue
 
-        mla = re.search(r"ML[AMU]-?\d+", link)
+        mla = re.search(r"ML[ABMU]-?\d+", link)
         mla_id = mla.group(0).replace("-", "") if mla else ""
-        catm = re.search(r"/p/(ML[AMU]\d+)", link)
+        catm = re.search(r"/p/(ML[ABMU]\d+)", link)
         catalogo_id = catm.group(1) if catm else ""
 
         texto_card = card.get_text(" ", strip=True)

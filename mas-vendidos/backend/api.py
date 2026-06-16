@@ -45,7 +45,7 @@ import meli_common as mc
 import meli_fetch as mf
 
 CACHE_TTL_S = 600          # 10 min: respuestas cacheadas para no re-scrapear de mas
-CAT_ID_RE = re.compile(r"^ML[AMU]\d+$")  # MLA=Argentina, MLM=Mexico, MLU=Uruguay
+CAT_ID_RE = re.compile(r"^ML[ABMU]\d+$")  # A=Argentina B=Brasil M=Mexico U=Uruguay
 
 app = FastAPI(title="Scrapper Meli - Más vendidos a demanda", version="1.0")
 
@@ -60,7 +60,7 @@ app.add_middleware(
 # ----------------------- Catalogo de nombres (AR + MX) -----------------------
 def _cargar_nombres():
     nombres = {}
-    for p in ("AR", "MX", "UY"):
+    for p in ("AR", "MX", "UY", "BR"):
         for c in mc.cargar_catalogo(p):
             nombres.setdefault(c["id"], c.get("nombre", ""))
     return nombres
@@ -166,7 +166,8 @@ def paises():
     """Paises disponibles."""
     return [{"codigo": "AR", "nombre": "Argentina"},
             {"codigo": "MX", "nombre": "México"},
-            {"codigo": "UY", "nombre": "Uruguay"}]
+            {"codigo": "UY", "nombre": "Uruguay"},
+            {"codigo": "BR", "nombre": "Brasil"}]
 
 
 @app.get("/mas-vendidos/{cat_id}")

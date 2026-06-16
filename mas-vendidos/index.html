@@ -78,6 +78,7 @@ tailwind.config = {
         <option value="AR">🇦🇷 Argentina</option>
         <option value="MX">🇲🇽 México</option>
         <option value="UY">🇺🇾 Uruguay</option>
+        <option value="BR">🇧🇷 Brasil</option>
       </select>
       <input id="filtro" type="text" placeholder="🔎 Filtrar categoría por nombre o ID (ej. Audio, MLA1000)…"
              class="border border-gray-300 rounded-lg px-3 py-2.5">
@@ -120,8 +121,13 @@ $("save").onclick = () => {
 let CATS = [];
 const NIVEL_ORDEN = { L1: 0, L2: 1, L3: 2 };
 const esc = s => (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-const DOMINIOS = { MLM: "com.mx", MLU: "com.uy", MLA: "com.ar" };
-const urlMasVendidos = id => `https://www.mercadolibre.${DOMINIOS[id.slice(0,3)] || "com.ar"}/mas-vendidos/${id}`;
+const SITIOS = {
+  MLA: "https://www.mercadolibre.com.ar/mas-vendidos/",
+  MLM: "https://www.mercadolibre.com.mx/mas-vendidos/",
+  MLU: "https://www.mercadolibre.com.uy/mas-vendidos/",
+  MLB: "https://www.mercadolivre.com.br/mais-vendidos/",
+};
+const urlMasVendidos = id => (SITIOS[id.slice(0,3)] || SITIOS.MLA) + id;
 
 function actualizarLink() {
   const id = $("cat").value;

@@ -21,7 +21,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import requests
 
-PAIS_OF = {"MLA": "AR", "MLM": "MX", "MLU": "UY"}
+PAIS_OF = {"MLA": "AR", "MLM": "MX", "MLU": "UY", "MLB": "BR"}
 API = "https://api.mercadolibre.com"
 
 
