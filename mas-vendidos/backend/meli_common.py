@@ -23,9 +23,9 @@ URL_TPL = "https://www.mercadolibre.com.ar/mas-vendidos/{cat_id}"  # compat
 BLOCK_MARKERS = ("suspicious-traffic", "verifyChallenge", "account-verification",
                  "micro-landing-container")
 
-# Sitio por prefijo de ID: MLA=Argentina, MLM=Mexico.
-SITIOS = {"MLA": "com.ar", "MLM": "com.mx"}
-PAIS_DE_PREFIJO = {"MLA": "AR", "MLM": "MX"}
+# Sitio por prefijo de ID: MLA=Argentina, MLM=Mexico, MLU=Uruguay.
+SITIOS = {"MLA": "com.ar", "MLM": "com.mx", "MLU": "com.uy"}
+PAIS_DE_PREFIJO = {"MLA": "AR", "MLM": "MX", "MLU": "UY"}
 
 
 def dominio_de(cat_id):

@@ -31,6 +31,7 @@
       <select id="pais" class="border border-gray-300 rounded-lg px-3 py-2 font-semibold">
         <option value="AR">🇦🇷 Argentina</option>
         <option value="MX">🇲🇽 México</option>
+        <option value="UY">🇺🇾 Uruguay</option>
       </select>
       <input id="filtro" type="text" placeholder="🔎 Filtrar categoría por nombre o ID (ej. Audio, MLA1000)…"
              class="flex-1 min-w-[240px] border border-gray-300 rounded-lg px-3 py-2">
@@ -72,9 +73,10 @@ let CATS = [];                 // catalogo completo en memoria
 const NIVEL_ORDEN = { L1: 0, L2: 1, L3: 2 };
 const esc = s => (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-// Link a la pagina de mas vendidos segun el prefijo del ID (MLM=Mexico, MLA=Argentina)
+// Link a la pagina de mas vendidos segun el prefijo del ID
+const DOMINIOS = { MLM: "com.mx", MLU: "com.uy", MLA: "com.ar" };
 const urlMasVendidos = id =>
-  `https://www.mercadolibre.${id.startsWith("MLM") ? "com.mx" : "com.ar"}/mas-vendidos/${id}`;
+  `https://www.mercadolibre.${DOMINIOS[id.slice(0,3)] || "com.ar"}/mas-vendidos/${id}`;
 
 function actualizarLink() {
   const id = $("cat").value;
