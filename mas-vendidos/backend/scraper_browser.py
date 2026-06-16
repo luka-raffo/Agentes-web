@@ -57,7 +57,7 @@ def init_driver():
 
 
 def scrapear(driver, cat_id, cat_name):
-    url = mc.URL_TPL.format(cat_id=cat_id)
+    url = mc.url_mas_vendidos(cat_id)
     print(f"  -> {url}")
     driver.get(url)
     time.sleep(random.uniform(2.5, 4.0))

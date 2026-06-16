@@ -28,8 +28,12 @@
   <!-- Selector de categoria -->
   <div class="flex flex-col gap-2 mb-6">
     <div class="flex flex-wrap gap-2 items-center">
+      <select id="pais" class="border border-gray-300 rounded-lg px-3 py-2 font-semibold">
+        <option value="AR">🇦🇷 Argentina</option>
+        <option value="MX">🇲🇽 México</option>
+      </select>
       <input id="filtro" type="text" placeholder="🔎 Filtrar categoría por nombre o ID (ej. Audio, MLA1000)…"
-             class="flex-1 min-w-[260px] border border-gray-300 rounded-lg px-3 py-2">
+             class="flex-1 min-w-[240px] border border-gray-300 rounded-lg px-3 py-2">
       <select id="nivel" class="border border-gray-300 rounded-lg px-3 py-2">
         <option value="todas">Todos los niveles</option>
         <option value="l1">Solo L1 (raíz)</option>
@@ -42,6 +46,7 @@
     </div>
     <div class="flex flex-wrap gap-2 items-center">
       <button id="go" class="bg-blue-700 hover:bg-blue-800 text-white px-5 py-2 rounded-lg font-semibold">Buscar más vendidos</button>
+      <a id="verlink" href="#" target="_blank" class="hidden text-sm text-blue-600 hover:underline">🔗 Ver esta categoría en MercadoLibre</a>
       <span id="count" class="text-xs text-gray-400"></span>
       <span id="status" class="text-sm text-gray-500"></span>
     </div>
@@ -67,10 +72,22 @@ let CATS = [];                 // catalogo completo en memoria
 const NIVEL_ORDEN = { L1: 0, L2: 1, L3: 2 };
 const esc = s => (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
+// Link a la pagina de mas vendidos segun el prefijo del ID (MLM=Mexico, MLA=Argentina)
+const urlMasVendidos = id =>
+  `https://www.mercadolibre.${id.startsWith("MLM") ? "com.mx" : "com.ar"}/mas-vendidos/${id}`;
+
+function actualizarLink() {
+  const id = $("cat").value;
+  const a = $("verlink");
+  if (id) { a.href = urlMasVendidos(id); a.classList.remove("hidden"); }
+  else { a.classList.add("hidden"); }
+}
+
 async function cargarCategorias() {
   $("cat").innerHTML = "";
   try {
-    const r = await fetch(`${API}/categorias?nivel=todas`);
+    const pais = $("pais").value;
+    const r = await fetch(`${API}/categorias?pais=${pais}&nivel=todas`);
     CATS = await r.json();
     CATS.sort((a, b) => (NIVEL_ORDEN[a.nivel] - NIVEL_ORDEN[b.nivel]) ||
                         (a.ruta || a.nombre).localeCompare(b.ruta || b.nombre));
@@ -95,6 +112,7 @@ function renderOpciones() {
     `<option value="${c.id}">[${c.nivel}] ${esc(c.ruta || c.nombre)} · ${c.id}</option>`).join("");
   $("count").textContent = lista.length + " categorías" +
     (lista.length > MAX ? ` (mostrando ${MAX}, refiná el filtro)` : "");
+  actualizarLink();
 }
 
 async function buscar() {
@@ -112,6 +130,8 @@ async function buscar() {
     }
     const data = await r.json();
     $("status").textContent = `${data.cantidad} productos · ${data.categoria}` + (data.cacheado ? " (cache)" : "");
+    // link de validacion: abrir la pagina real de mas vendidos
+    if (data.url) { $("verlink").href = data.url; $("verlink").classList.remove("hidden"); }
     $("grid").innerHTML = data.productos.map(p => `
       <div class="bg-white rounded-xl shadow overflow-hidden flex flex-col">
         <img src="${p.imagen || ''}" class="w-full h-40 object-contain bg-gray-50" onerror="this.style.visibility='hidden'">
@@ -132,6 +152,8 @@ async function buscar() {
 $("go").onclick = buscar;
 $("filtro").addEventListener("input", renderOpciones);
 $("nivel").addEventListener("change", renderOpciones);
+$("pais").addEventListener("change", cargarCategorias);
+$("cat").addEventListener("change", actualizarLink);
 cargarCategorias();
 </script>
 </body>

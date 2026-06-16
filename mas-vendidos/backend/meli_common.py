@@ -19,9 +19,24 @@ OUT_JSON = os.path.join(BASE_DIR, "resultados_l1.json")
 OUT_XLSX = os.path.join(BASE_DIR, "resultados_l1.xlsx")
 DEBUG_DIR = os.path.join(BASE_DIR, "debug")
 
-URL_TPL = "https://www.mercadolibre.com.ar/mas-vendidos/{cat_id}"
+URL_TPL = "https://www.mercadolibre.com.ar/mas-vendidos/{cat_id}"  # compat
 BLOCK_MARKERS = ("suspicious-traffic", "verifyChallenge", "account-verification",
                  "micro-landing-container")
+
+# Sitio por prefijo de ID: MLA=Argentina, MLM=Mexico.
+SITIOS = {"MLA": "com.ar", "MLM": "com.mx"}
+PAIS_DE_PREFIJO = {"MLA": "AR", "MLM": "MX"}
+
+
+def dominio_de(cat_id):
+    for pref, dom in SITIOS.items():
+        if cat_id.startswith(pref):
+            return dom
+    return "com.ar"
+
+
+def url_mas_vendidos(cat_id):
+    return f"https://www.mercadolibre.{dominio_de(cat_id)}/mas-vendidos/{cat_id}"
 
 
 # ----------------------- Categorias -----------------------
@@ -58,8 +73,23 @@ def cargar_categorias_todas():
                 cid = (idc or "").strip()
                 if cid and cid not in vistas:
                     vistas[cid] = {"id": cid, "nombre": nombre, "nivel": nivel,
-                                   "vertical": vert, "ruta": ruta}
+                                   "vertical": vert, "ruta": ruta, "pais": "AR"}
     return list(vistas.values())
+
+
+def cargar_catalogo(pais="AR"):
+    """Catalogo de categorias por pais. AR = del CSV; otros = categorias_<pais>.json."""
+    pais = (pais or "AR").upper()
+    if pais == "AR":
+        return cargar_categorias_todas()
+    path = os.path.join(BASE_DIR, f"categorias_{pais.lower()}.json")
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding="utf-8") as f:
+        cats = json.load(f)
+    for c in cats:
+        c.setdefault("pais", pais)
+    return cats
 
 
 # ----------------------- Progreso -----------------------
@@ -186,7 +216,8 @@ def registro_categoria(cat_id, cat_name, productos):
     return {
         "categoria_id": cat_id,
         "categoria": cat_name,
-        "url": URL_TPL.format(cat_id=cat_id),
+        "pais": PAIS_DE_PREFIJO.get(cat_id[:3], ""),
+        "url": url_mas_vendidos(cat_id),
         "fecha_extraccion": datetime.now().strftime("%Y-%m-%d %H:%M"),
         "productos": productos,
     }

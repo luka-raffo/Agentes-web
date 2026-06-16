@@ -97,7 +97,7 @@ def scrapear_categoria(cat_id, log=print, **kw):
       estado = "ok" | "bloqueado" | "vacio"
     kw extra (max_retries, backoff_base, backoff_max) se pasan a obtener_html.
     """
-    url = mc.URL_TPL.format(cat_id=cat_id)
+    url = mc.url_mas_vendidos(cat_id)
     status, html = obtener_html(url, log=log, **kw)
 
     if not html or mc.esta_bloqueado(html):

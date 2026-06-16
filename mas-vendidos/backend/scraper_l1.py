@@ -38,7 +38,7 @@ def main():
     bloqueadas = []
     for idx, (cid, nombre) in enumerate(pendientes, 1):
         print(f"[{idx}/{len(pendientes)}] {cid} - {nombre}")
-        print(f"  -> {mc.URL_TPL.format(cat_id=cid)}")
+        print(f"  -> {mc.url_mas_vendidos(cid)}")
         estado, productos = mf.scrapear_categoria(cid)
 
         if estado == "bloqueado":

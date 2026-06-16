@@ -45,7 +45,7 @@ import meli_common as mc
 import meli_fetch as mf
 
 CACHE_TTL_S = 600          # 10 min: respuestas cacheadas para no re-scrapear de mas
-CAT_ID_RE = re.compile(r"^MLA\d+$")
+CAT_ID_RE = re.compile(r"^ML[AM]\d+$")   # MLA=Argentina, MLM=Mexico
 
 app = FastAPI(title="Scrapper Meli - Más vendidos a demanda", version="1.0")
 
@@ -57,20 +57,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ----------------------- Catalogo de categorias (todos los niveles del CSV) ---
+# ----------------------- Catalogo de nombres (AR + MX) -----------------------
 def _cargar_nombres():
     nombres = {}
-    try:
-        with open(mc.CSV_FILE, encoding="utf-8") as f:
-            for row in csv.DictReader(f):
-                for idc, namec in (("L1 ID", "L1 Nombre"),
-                                   ("L2 ID", "L2 Nombre"),
-                                   ("L3 ID", "L3 Nombre")):
-                    cid = (row.get(idc) or "").strip()
-                    if cid and cid not in nombres:
-                        nombres[cid] = (row.get(namec) or "").strip()
-    except FileNotFoundError:
-        pass
+    for p in ("AR", "MX"):
+        for c in mc.cargar_catalogo(p):
+            nombres.setdefault(c["id"], c.get("nombre", ""))
     return nombres
 
 NOMBRES = _cargar_nombres()
@@ -128,7 +120,8 @@ def _resolver(cat_id: str, nocache: bool):
         payload = {
             "categoria_id": cat_id,
             "categoria": NOMBRES.get(cat_id, ""),
-            "url": mc.URL_TPL.format(cat_id=cat_id),
+            "pais": mc.PAIS_DE_PREFIJO.get(cat_id[:3], ""),
+            "url": mc.url_mas_vendidos(cat_id),
             "cantidad": len(productos),
             "cacheado": False,
             "productos": productos,
@@ -154,19 +147,24 @@ def health():
 
 
 @app.get("/categorias")
-def categorias(nivel: str = Query("todas")):
-    """Categorias del CSV. nivel: todas (default) | l1 | l2 | l3.
+def categorias(pais: str = Query("AR"), nivel: str = Query("todas")):
+    """Categorias por pais y nivel.
 
-    Devuelve {id, nombre, nivel, vertical, ruta}. 'todas' = L1+L2+L3 (~3057).
+    pais: AR (Argentina, del CSV) | MX (Mexico, del arbol API).
+    nivel: todas (default) | l1 | l2 | l3.
+    Devuelve {id, nombre, nivel, vertical, ruta, pais}.
     """
     nivel = (nivel or "todas").lower()
-    if nivel == "l1":
-        return [{"id": cid, "nombre": nom, "nivel": "L1", "vertical": "", "ruta": nom}
-                for cid, nom in mc.cargar_categorias_l1()]
-    todas = mc.cargar_categorias_todas()
-    if nivel in ("l2", "l3"):
+    todas = mc.cargar_catalogo(pais)
+    if nivel in ("l1", "l2", "l3"):
         todas = [c for c in todas if c["nivel"].lower() == nivel]
     return todas
+
+
+@app.get("/paises")
+def paises():
+    """Paises disponibles."""
+    return [{"codigo": "AR", "nombre": "Argentina"}, {"codigo": "MX", "nombre": "México"}]
 
 
 @app.get("/mas-vendidos/{cat_id}")
