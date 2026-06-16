@@ -154,9 +154,19 @@ def health():
 
 
 @app.get("/categorias")
-def categorias():
-    """Categorias L1 (raiz) del CSV, las recomendadas para consultar."""
-    return [{"id": cid, "nombre": nom} for cid, nom in mc.cargar_categorias_l1()]
+def categorias(nivel: str = Query("todas")):
+    """Categorias del CSV. nivel: todas (default) | l1 | l2 | l3.
+
+    Devuelve {id, nombre, nivel, vertical, ruta}. 'todas' = L1+L2+L3 (~3057).
+    """
+    nivel = (nivel or "todas").lower()
+    if nivel == "l1":
+        return [{"id": cid, "nombre": nom, "nivel": "L1", "vertical": "", "ruta": nom}
+                for cid, nom in mc.cargar_categorias_l1()]
+    todas = mc.cargar_categorias_todas()
+    if nivel in ("l2", "l3"):
+        todas = [c for c in todas if c["nivel"].lower() == nivel]
+    return todas
 
 
 @app.get("/mas-vendidos/{cat_id}")

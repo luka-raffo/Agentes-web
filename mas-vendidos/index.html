@@ -26,10 +26,25 @@
   </div>
 
   <!-- Selector de categoria -->
-  <div class="flex flex-wrap gap-2 items-center mb-6">
-    <select id="cat" class="flex-1 min-w-[260px] border border-gray-300 rounded-lg px-3 py-2"></select>
-    <button id="go" class="bg-blue-700 hover:bg-blue-800 text-white px-5 py-2 rounded-lg font-semibold">Buscar más vendidos</button>
-    <span id="status" class="text-sm text-gray-500"></span>
+  <div class="flex flex-col gap-2 mb-6">
+    <div class="flex flex-wrap gap-2 items-center">
+      <input id="filtro" type="text" placeholder="🔎 Filtrar categoría por nombre o ID (ej. Audio, MLA1000)…"
+             class="flex-1 min-w-[260px] border border-gray-300 rounded-lg px-3 py-2">
+      <select id="nivel" class="border border-gray-300 rounded-lg px-3 py-2">
+        <option value="todas">Todos los niveles</option>
+        <option value="l1">Solo L1 (raíz)</option>
+        <option value="l2">Solo L2</option>
+        <option value="l3">Solo L3</option>
+      </select>
+    </div>
+    <div class="flex flex-wrap gap-2 items-center">
+      <select id="cat" size="8" class="flex-1 min-w-[260px] border border-gray-300 rounded-lg px-3 py-2"></select>
+    </div>
+    <div class="flex flex-wrap gap-2 items-center">
+      <button id="go" class="bg-blue-700 hover:bg-blue-800 text-white px-5 py-2 rounded-lg font-semibold">Buscar más vendidos</button>
+      <span id="count" class="text-xs text-gray-400"></span>
+      <span id="status" class="text-sm text-gray-500"></span>
+    </div>
   </div>
 
   <div id="grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4"></div>
@@ -48,16 +63,38 @@ $("save").onclick = () => {
   cargarCategorias();
 };
 
+let CATS = [];                 // catalogo completo en memoria
+const NIVEL_ORDEN = { L1: 0, L2: 1, L3: 2 };
+const esc = s => (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
 async function cargarCategorias() {
   $("cat").innerHTML = "";
   try {
-    const r = await fetch(`${API}/categorias`);
-    const cats = await r.json();
-    $("cat").innerHTML = cats.map(c => `<option value="${c.id}">${c.nombre} (${c.id})</option>`).join("");
-    $("apistate").textContent = "Conectado a " + API;
+    const r = await fetch(`${API}/categorias?nivel=todas`);
+    CATS = await r.json();
+    CATS.sort((a, b) => (NIVEL_ORDEN[a.nivel] - NIVEL_ORDEN[b.nivel]) ||
+                        (a.ruta || a.nombre).localeCompare(b.ruta || b.nombre));
+    $("apistate").textContent = "Conectado a " + API + " · " + CATS.length + " categorías";
+    renderOpciones();
   } catch (e) {
     $("apistate").textContent = "⚠ No se pudo conectar a " + API + ". ¿Está corriendo start.bat + tunnel.bat?";
   }
+}
+
+function renderOpciones() {
+  const q = $("filtro").value.trim().toLowerCase();
+  const niv = $("nivel").value;
+  let lista = CATS;
+  if (niv !== "todas") lista = lista.filter(c => c.nivel.toLowerCase() === niv);
+  if (q) lista = lista.filter(c =>
+    (c.ruta || c.nombre).toLowerCase().includes(q) || c.id.toLowerCase().includes(q));
+
+  const MAX = 1000; // limita el render para que el navegador no sufra
+  const recortada = lista.slice(0, MAX);
+  $("cat").innerHTML = recortada.map(c =>
+    `<option value="${c.id}">[${c.nivel}] ${esc(c.ruta || c.nombre)} · ${c.id}</option>`).join("");
+  $("count").textContent = lista.length + " categorías" +
+    (lista.length > MAX ? ` (mostrando ${MAX}, refiná el filtro)` : "");
 }
 
 async function buscar() {
@@ -93,6 +130,8 @@ async function buscar() {
 }
 
 $("go").onclick = buscar;
+$("filtro").addEventListener("input", renderOpciones);
+$("nivel").addEventListener("change", renderOpciones);
 cargarCategorias();
 </script>
 </body>

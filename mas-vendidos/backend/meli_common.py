@@ -36,6 +36,32 @@ def cargar_categorias_l1():
     return list(vistas.items())
 
 
+def cargar_categorias_todas():
+    """Todas las categorias unicas del CSV (L1+L2+L3), con nivel, vertical y ruta.
+
+    Devuelve lista de dicts: {id, nombre, nivel, vertical, ruta}.
+    Dedup por ID (primera aparicion gana).
+    """
+    vistas = {}
+    with open(CSV_FILE, encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            vert = (row.get("Vertical") or "").strip()
+            l1n = (row.get("L1 Nombre") or "").strip()
+            l2n = (row.get("L2 Nombre") or "").strip()
+            l3n = (row.get("L3 Nombre") or "").strip()
+            niveles = (
+                ("L1", row.get("L1 ID"), l1n, l1n),
+                ("L2", row.get("L2 ID"), l2n, " > ".join(filter(None, [l1n, l2n]))),
+                ("L3", row.get("L3 ID"), l3n, " > ".join(filter(None, [l1n, l2n, l3n]))),
+            )
+            for nivel, idc, nombre, ruta in niveles:
+                cid = (idc or "").strip()
+                if cid and cid not in vistas:
+                    vistas[cid] = {"id": cid, "nombre": nombre, "nivel": nivel,
+                                   "vertical": vert, "ruta": ruta}
+    return list(vistas.values())
+
+
 # ----------------------- Progreso -----------------------
 def cargar_progreso():
     if os.path.exists(OUT_JSON):
