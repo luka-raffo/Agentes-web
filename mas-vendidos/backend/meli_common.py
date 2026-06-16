@@ -129,15 +129,22 @@ def exportar_excel(resultados):
             filas.append({
                 "Categoria_ID": cat["categoria_id"],
                 "Categoria": cat["categoria"],
+                "Pais": cat.get("pais", ""),
                 "Ranking": p["ranking"],
+                "Mas_vendido": p.get("highlight", ""),
                 "Titulo": p["titulo"],
+                "Moneda": p.get("moneda", ""),
                 "Precio": p["precio"],
                 "Precio_original": p.get("precio_original", ""),
                 "Descuento": p.get("descuento", ""),
-                "Vendedor_Marca": p.get("vendedor", ""),
+                "Cuotas": p.get("cuotas", ""),
+                "Cantidad_vendida": p.get("vendidos", ""),
                 "Rating": p.get("rating", ""),
                 "Reviews": p.get("reviews", ""),
+                "Envio": p.get("envio", ""),
+                "Vendedor_Marca": p.get("vendedor", ""),
                 "MLA_ID": p.get("mla_id", ""),
+                "Catalogo_ID": p.get("catalogo_id", ""),
                 "Link": p["link"],
                 "Imagen": p.get("imagen", ""),
                 "Fecha": cat["fecha_extraccion"],
@@ -173,33 +180,61 @@ def parsear_productos(html):
         if not titulo or not link:
             continue
 
-        mla = re.search(r"MLA-?\d+", link)
+        mla = re.search(r"ML[AMU]-?\d+", link)
         mla_id = mla.group(0).replace("-", "") if mla else ""
+        catm = re.search(r"/p/(ML[AMU]\d+)", link)
+        catalogo_id = catm.group(1) if catm else ""
 
-        precios = card.select("span.andes-money-amount__fraction")
-        precio = _txt(precios[0]) if precios else ""
-        precio_orig = _txt(precios[1]) if len(precios) > 1 else ""
+        texto_card = card.get_text(" ", strip=True)
 
-        desc = _txt(card.select_one(
-            "span.andes-money-amount__discount, .poly-price__disc"))
-        vendedor = _txt(card.select_one(
-            ".poly-component__seller, .poly-component__brand"))
-        rating = _txt(card.select_one(".poly-reviews__rating"))
-        reviews = _txt(card.select_one(".poly-reviews__total")).strip("()")
+        # Posicion / badge "N° MÁS VENDIDO"
+        highlight = _txt(card.select_one(".poly-component__highlight"))
+
+        # Precio actual + moneda
+        cur = card.select_one(".poly-price__current") or card
+        precio = _txt(cur.select_one(".andes-money-amount__fraction"))
+        moneda = _txt(cur.select_one(".andes-money-amount__currency-symbol"))
+        # Precio anterior (tachado) y descuento
+        prev = card.select_one("s.andes-money-amount .andes-money-amount__fraction")
+        precio_orig = _txt(prev)
+        desc = _txt(card.select_one(".andes-money-amount__discount, .poly-price__disc"))
+        # Cuotas
+        cuotas = _txt(card.select_one(".poly-price__installments"))
+
+        # Rating, cantidad de opiniones y cantidad vendida
+        rc = _txt(card.select_one(".poly-component__review-compacted")) \
+            or _txt(card.select_one(".poly-reviews, .poly-component__reviews"))
+        mr = re.search(r"\d[.,]\d", rc) if rc else None
+        rating = mr.group(0) if mr else _txt(card.select_one(".poly-reviews__rating"))
+        mp = re.search(r"\(([\d.,]+)\)", rc) if rc else None
+        reviews = mp.group(1) if mp else ""
+        mv = re.search(r"\+?\s?[\d.,]+\s*(?:mil|millones)?\s*vendidos", texto_card, re.I)
+        vendidos = mv.group(0).strip() if mv else ""
+
+        # Envio y vendedor/marca
+        env_el = card.select_one(".poly-component__shipping")
+        envio = env_el.get_text(" ", strip=True) if env_el else ""
+        vendedor = _txt(card.select_one(".poly-component__seller, .poly-component__brand"))
 
         img_el = card.find("img")
         imagen = (img_el.get("data-src") or img_el.get("src") or "") if img_el else ""
 
         productos.append({
             "ranking": i,
+            "highlight": highlight,
             "titulo": titulo,
+            "moneda": moneda,
             "precio": precio,
             "precio_original": precio_orig,
             "descuento": desc,
-            "vendedor": vendedor,
+            "cuotas": cuotas,
+            "vendidos": vendidos,
             "rating": rating,
             "reviews": reviews,
+            "envio": envio,
+            "vendedor": vendedor,
             "mla_id": mla_id,
+            "catalogo_id": catalogo_id,
             "link": link,
             "imagen": imagen,
         })

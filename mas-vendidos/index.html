@@ -134,14 +134,25 @@ async function buscar() {
     $("status").textContent = `${data.cantidad} productos · ${data.categoria}` + (data.cacheado ? " (cache)" : "");
     // link de validacion: abrir la pagina real de mas vendidos
     if (data.url) { $("verlink").href = data.url; $("verlink").classList.remove("hidden"); }
+    const m = p => p.moneda || "$";
     $("grid").innerHTML = data.productos.map(p => `
       <div class="bg-white rounded-xl shadow overflow-hidden flex flex-col">
         <img src="${p.imagen || ''}" class="w-full h-40 object-contain bg-gray-50" onerror="this.style.visibility='hidden'">
         <div class="p-3 flex flex-col gap-1">
           <span class="text-xs font-bold text-blue-700">#${p.ranking} más vendido</span>
           <a href="${p.link}" target="_blank" class="text-sm text-gray-800 hover:text-blue-700 leading-tight line-clamp-3">${p.titulo}</a>
-          <span class="text-lg font-semibold text-gray-900">$${p.precio}</span>
-          <span class="text-xs text-green-600">${p.vendedor || ''}</span>
+          <div class="flex items-baseline gap-2 flex-wrap">
+            <span class="text-lg font-semibold text-gray-900">${m(p)}${p.precio}</span>
+            ${p.precio_original ? `<span class="text-xs text-gray-400 line-through">${m(p)}${p.precio_original}</span>` : ""}
+            ${p.descuento ? `<span class="text-xs text-green-600 font-semibold">${p.descuento}</span>` : ""}
+          </div>
+          ${p.cuotas ? `<span class="text-xs text-gray-500">${p.cuotas}</span>` : ""}
+          <div class="text-xs text-gray-500 flex gap-2 flex-wrap">
+            ${p.rating ? `<span>⭐ ${p.rating}</span>` : ""}
+            ${p.vendidos ? `<span>· ${p.vendidos}</span>` : ""}
+          </div>
+          ${p.envio ? `<span class="text-xs text-green-700">${p.envio}</span>` : ""}
+          ${p.vendedor ? `<span class="text-xs text-gray-500">Vendedor: ${p.vendedor}</span>` : ""}
         </div>
       </div>`).join("");
   } catch (e) {
