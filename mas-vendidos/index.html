@@ -120,6 +120,9 @@ $("save").onclick = () => {
 
 let CATS = [];
 const NIVEL_ORDEN = { L1: 0, L2: 1, L3: 2 };
+// ngrok free muestra una pagina de aviso si no mandamos este header -> rompe el JSON.
+const HDRS = { "ngrok-skip-browser-warning": "1" };
+const fetchJSON = (u) => fetch(u, { headers: HDRS });
 const esc = s => (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const SITIOS = {
   MLA: "https://www.mercadolibre.com.ar/mas-vendidos/",
@@ -139,7 +142,7 @@ function actualizarLink() {
 async function cargarCategorias() {
   $("cat").innerHTML = "";
   try {
-    const r = await fetch(`${API}/categorias?pais=${$("pais").value}&nivel=todas`);
+    const r = await fetchJSON(`${API}/categorias?pais=${$("pais").value}&nivel=todas`);
     CATS = await r.json();
     CATS.sort((a, b) => (NIVEL_ORDEN[a.nivel] - NIVEL_ORDEN[b.nivel]) ||
                         (a.ruta || a.nombre).localeCompare(b.ruta || b.nombre));
@@ -204,7 +207,7 @@ async function buscar() {
   $("grid").innerHTML = "";
   $("status").innerHTML = `<span class="inline-block w-3 h-3 border-2 border-bidcom border-t-transparent rounded-full spin align-middle"></span> Buscando…`;
   try {
-    const r = await fetch(`${API}/mas-vendidos/${id}`);
+    const r = await fetchJSON(`${API}/mas-vendidos/${id}`);
     if (!r.ok) {
       const err = await r.json().catch(() => ({}));
       $("status").textContent = "⚠ Error " + r.status + ": " + (err.detail || "no disponible");
