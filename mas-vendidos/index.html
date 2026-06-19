@@ -87,6 +87,10 @@ tailwind.config = {
         <option value="l1">Solo L1 (raíz)</option>
         <option value="l2">Solo L2</option>
         <option value="l3">Solo L3</option>
+        <option value="l4">Solo L4</option>
+        <option value="l5">Solo L5</option>
+        <option value="l6">Solo L6</option>
+        <option value="l7">Solo L7</option>
       </select>
     </div>
     <select id="cat" size="8" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3"></select>
@@ -119,7 +123,8 @@ $("save").onclick = () => {
 };
 
 let CATS = [];
-const NIVEL_ORDEN = { L1: 0, L2: 1, L3: 2 };
+// Orden por profundidad real del arbol (AR llega hasta L7).
+const nivOrden = n => parseInt((n || "L9").slice(1), 10) || 9;
 // ngrok free muestra una pagina de aviso si no mandamos este header -> rompe el JSON.
 const HDRS = { "ngrok-skip-browser-warning": "1" };
 const fetchJSON = (u) => fetch(u, { headers: HDRS });
@@ -144,7 +149,7 @@ async function cargarCategorias() {
   try {
     const r = await fetchJSON(`${API}/categorias?pais=${$("pais").value}&nivel=todas`);
     CATS = await r.json();
-    CATS.sort((a, b) => (NIVEL_ORDEN[a.nivel] - NIVEL_ORDEN[b.nivel]) ||
+    CATS.sort((a, b) => (nivOrden(a.nivel) - nivOrden(b.nivel)) ||
                         (a.ruta || a.nombre).localeCompare(b.ruta || b.nombre));
     $("apistate").textContent = "✓ conectado · " + CATS.length + " categorías";
     $("apistate").className = "font-normal text-xs text-green-600 ml-2";

@@ -77,13 +77,12 @@ def cargar_categorias_todas():
 
 
 def cargar_catalogo(pais="AR"):
-    """Catalogo de categorias por pais. AR = del CSV; otros = categorias_<pais>.json."""
+    """Catalogo de categorias por pais. Lee categorias_<pais>.json (arbol completo
+    de la API de ML, hasta 7 niveles). Para AR, si no existe el JSON, cae al CSV."""
     pais = (pais or "AR").upper()
-    if pais == "AR":
-        return cargar_categorias_todas()
     path = os.path.join(BASE_DIR, f"categorias_{pais.lower()}.json")
     if not os.path.exists(path):
-        return []
+        return cargar_categorias_todas() if pais == "AR" else []
     with open(path, encoding="utf-8") as f:
         cats = json.load(f)
     for c in cats:
