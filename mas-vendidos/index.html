@@ -73,7 +73,11 @@ tailwind.config = {
 
   <!-- Controles -->
   <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-4 sm:p-5 mb-6">
-    <div class="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] gap-3 mb-3">
+    <div class="grid grid-cols-1 sm:grid-cols-[auto_auto_1fr_auto] gap-3 mb-3">
+      <select id="tienda" class="border border-gray-300 rounded-lg px-3 py-2.5 font-semibold text-white bg-bidcom">
+        <option value="meli">🛒 MercadoLibre</option>
+        <option value="amazon">📦 Amazon</option>
+      </select>
       <select id="pais" class="border border-gray-300 rounded-lg px-3 py-2.5 font-semibold text-bidcom-dark bg-bidcom-soft">
         <option value="AR">🇦🇷 Argentina</option>
         <option value="MX">🇲🇽 México</option>
@@ -103,6 +107,11 @@ tailwind.config = {
       <span id="status" class="text-sm text-gray-600 ml-auto"></span>
     </div>
   </div>
+
+  <p id="amzNota" class="hidden text-xs text-bidcom bg-bidcom-soft border border-bidcom/15 rounded-lg px-3 py-2 mb-4">
+    📦 <b>Amazon</b>: se buscan los más comprados del último mes por el nombre de la categoría de MercadoLibre.
+    Amazon solo tiene tienda local en México y Brasil; para Argentina y Uruguay se usa <b>amazon.com.mx</b>.
+  </p>
 
   <div id="grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4"></div>
 
@@ -136,12 +145,29 @@ const SITIOS = {
   MLB: "https://www.mercadolivre.com.br/mais-vendidos/",
 };
 const urlMasVendidos = id => (SITIOS[id.slice(0,3)] || SITIOS.MLA) + id;
+// Amazon solo tiene marketplace local en MX y BR; AR/UY caen a com.mx.
+const PAIS_PREF = { MLA: "AR", MLM: "MX", MLU: "UY", MLB: "BR" };
+const AMZ_DOM = { AR: "com.mx", MX: "com.mx", UY: "com.mx", BR: "com.br" };
+const catNombre = id => (CATS.find(c => c.id === id) || {}).nombre || "";
+function urlAmazon(id) {
+  const pais = PAIS_PREF[id.slice(0,3)] || "MX";
+  return `https://www.amazon.${AMZ_DOM[pais] || "com.mx"}/s?k=` + encodeURIComponent(catNombre(id));
+}
+const esAmazon = () => $("tienda").value === "amazon";
+
+function toggleNotaAmazon() {
+  $("amzNota").classList.toggle("hidden", !esAmazon());
+}
 
 function actualizarLink() {
   const id = $("cat").value;
   const a = $("verlink");
-  if (id) { a.href = urlMasVendidos(id); a.classList.remove("hidden"); }
-  else { a.classList.add("hidden"); }
+  if (id) {
+    a.href = esAmazon() ? urlAmazon(id) : urlMasVendidos(id);
+    a.textContent = esAmazon() ? "🔗 Ver esta búsqueda en Amazon"
+                               : "🔗 Ver esta categoría en MercadoLibre";
+    a.classList.remove("hidden");
+  } else { a.classList.add("hidden"); }
 }
 
 async function cargarCategorias() {
@@ -210,17 +236,23 @@ async function buscar() {
   if (!id) { $("status").textContent = "Elegí una categoría."; return; }
   $("go").disabled = true;
   $("grid").innerHTML = "";
-  $("status").innerHTML = `<span class="inline-block w-3 h-3 border-2 border-bidcom border-t-transparent rounded-full spin align-middle"></span> Buscando…`;
+  const tienda = $("tienda").value;
+  const tnombre = esAmazon() ? "Amazon" : "MercadoLibre";
+  $("status").innerHTML = `<span class="inline-block w-3 h-3 border-2 border-bidcom border-t-transparent rounded-full spin align-middle"></span> Buscando en ${tnombre}…`;
   try {
-    const r = await fetchJSON(`${API}/mas-vendidos/${id}`);
+    const r = await fetchJSON(`${API}/mas-vendidos/${id}?ecommerce=${tienda}`);
     if (!r.ok) {
       const err = await r.json().catch(() => ({}));
       $("status").textContent = "⚠ Error " + r.status + ": " + (err.detail || "no disponible");
       return;
     }
     const data = await r.json();
-    $("status").textContent = `${data.cantidad} productos · ${data.categoria}` + (data.cacheado ? " (cache)" : "");
-    if (data.url) { $("verlink").href = data.url; $("verlink").classList.remove("hidden"); }
+    $("status").textContent = `${data.cantidad} productos · ${data.categoria} · ${tnombre}` + (data.cacheado ? " (cache)" : "");
+    if (data.url) {
+      $("verlink").href = data.url;
+      $("verlink").textContent = esAmazon() ? "🔗 Ver esta búsqueda en Amazon" : "🔗 Ver esta categoría en MercadoLibre";
+      $("verlink").classList.remove("hidden");
+    }
     $("grid").innerHTML = data.productos.map(tarjeta).join("");
     if (!data.productos.length)
       $("grid").innerHTML = `<p class="col-span-full text-center text-gray-400 py-10">Esta categoría no devolvió productos.</p>`;
@@ -236,6 +268,7 @@ $("filtro").addEventListener("input", renderOpciones);
 $("nivel").addEventListener("change", renderOpciones);
 $("pais").addEventListener("change", cargarCategorias);
 $("cat").addEventListener("change", actualizarLink);
+$("tienda").addEventListener("change", () => { actualizarLink(); toggleNotaAmazon(); });
 cargarCategorias();
 </script>
 </body>
